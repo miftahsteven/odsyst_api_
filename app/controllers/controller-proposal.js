@@ -359,7 +359,7 @@ module.exports = {
                 user_nama: true,
                 username: true,
                 user_phone: true,
-              },
+              },              
             },
             //program:true,
             program: {
@@ -379,6 +379,7 @@ module.exports = {
                     user_nama: true,
                     username: true,
                     user_phone: true,
+                    user_type: true
                   },
                 },
               },
