@@ -25,18 +25,34 @@
 FROM --platform=linux/amd64 node:18-alpine
 # Create app directory
 WORKDIR /usr/src/app
+RUN mkdir /usr/src/uploads
+RUN touch /usr/src/app/uploads
+RUN mv /usr/src/app/uploads ../uploads/
+
+RUN apk update
+
+RUN apk add git
+
+RUN git clone https://github.com/miftahsteven/zis-api.git .
+
 
 RUN npm install pm2 -g
-
-COPY package*.json ./
-COPY ecosystem.config.js .
-
-COPY app app/
-COPY app.js .
-
 RUN npm install
+#COPY package*.json ./
+#COPY ecosystem.config.js .
 
-COPY . . 
+#COPY app app/
+#COPY config config/
+#COPY app.js .
+#COPY prisma prisma/
+#COPY .dockerignore .
+#COPY Dockerfile .
+COPY uploads.zip .
+
+#COPY . .
+#RUN mv /usr/src/uploads /usr/src/app/uploads/
+#RUN rm -rf /usr/src/uploads
+#RUN ln -s /usr/src/uploads/ uploads
 EXPOSE 4800
 
 RUN npx prisma generate
