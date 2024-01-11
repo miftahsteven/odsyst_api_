@@ -354,7 +354,7 @@ module.exports = {
           include: {
             user: {
               select: {
-                mustahiq_id: true,
+                mustahiq: true,
                 user_id: true,
                 user_nama: true,
                 username: true,
