@@ -408,7 +408,6 @@ module.exports = {
   
           const userId = req.user_id; 
           const id = req.body.id;
-          const array_of_allowed_files = ['pdf','png','jpg','jpeg'];
 
 
           const file = req.file;      
@@ -427,6 +426,7 @@ module.exports = {
             });
           }
 
+          const array_of_allowed_files = ['png','jpg','jpeg'];
           const file_extension = file.originalname.slice(
               ((file.originalname.lastIndexOf('.') - 1) >>> 0) + 2
           );
