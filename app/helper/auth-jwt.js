@@ -10,7 +10,7 @@ var publicKEY  = fs.readFileSync('./app/helper/public.key', 'utf8');
 const generate = (payload) => {
         var i  = 'Ziswaf@Indosat';   
         var s  = 'msteven';   
-        var a  = 'httsp://portal.zisindosat.id';
+        var a  = 'https://portal.zisindosat.id';
         var signOptions = {
             issuer:  i,
             subject:  s,
@@ -29,7 +29,7 @@ const generate = (payload) => {
 const verify = (token) => {
         var i  = 'Ziswaf@Indosat';   
         var s  = 'msteven';   
-        var a  = 'httsp://portal.zisindosat.id';
+        var a  = 'https://portal.zisindosat.id';
         var verifyOptions = {
             issuer:  i,
             subject:  s,
