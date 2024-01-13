@@ -337,13 +337,14 @@ module.exports = {
       const keyword = req.query.nama || "";
       const user_type = req.query.user_type || "";
       const category = req.query.category || "";
-      const sortBy = req.query.sortBy || "user_id";
+      const sortBy = req.query.sortBy || "create_date";
       const sortType = req.query.order || "desc";
 
       const params = {
         nama: {
           contains: keyword,
         },
+        status_bayar: 0,
       };
 
       const [count, proposals] = await prisma.$transaction([
@@ -433,7 +434,7 @@ module.exports = {
       const keyword = req.query.nama || "";
       const user_type = req.query.user_type || "";
       const category = req.query.category || "";
-      const sortBy = req.query.sortBy || "user_id";
+      const sortBy = req.query.sortBy || "create_date";
       const sortType = req.query.order || "desc";
 
       const params = {

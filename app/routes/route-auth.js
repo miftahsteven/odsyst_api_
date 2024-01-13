@@ -9,11 +9,11 @@ const loginlimiter = rateLimit({
     max: 3,
     message: {
         status: 429,
-        message: "Terlalu banyak kesalahan. Silakan ulangi dalam 10 menit."
+        message: "Terlalu banyak kesalahan. Silakan ulangi dalam 3 menit."
     },
     onLimitReached: (req, res, options) => {
         return res.status(429).json({
-            message: "Terlalu banyak kesalahan. Silakan ulangi dalam 10 menit.",
+            message: "Terlalu banyak kesalahan. Silakan ulangi dalam 3 menit.",
         });
     },
 });
