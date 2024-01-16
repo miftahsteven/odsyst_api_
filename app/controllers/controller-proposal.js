@@ -316,6 +316,17 @@ module.exports = {
         },
       });
 
+      if(status == 2){
+          const updateStatusAll = await prisma.proposal.update({
+            where: {
+              id: Number(proposal_id),
+            },
+            data:{ 
+              approved: 2
+            },
+          })
+      }
+
       return res.status(200).json({
         message: "Approva",
         data: appResult,
@@ -332,24 +343,68 @@ module.exports = {
     try {
       const page = Number(req.query.page || 1);
       const perPage = Number(req.query.perPage || 10);
-      const status = Number(req.query.status || 4);
+      const status = Number(req.query.status || 0);
       const skip = (page - 1) * perPage;
       const keyword = req.query.nama || "";
       const user_type = req.query.user_type || "";
       const category = req.query.category || "";
       const sortBy = req.query.sortBy || "create_date";
       const sortType = req.query.order || "desc";
-
+      
+      // const params = {
+      //   nama: {
+      //     contains: keyword,
+      //   },
+      //   //status_bayar: 0,
+      // };
+      //waiting approval
       const params = {
         nama: {
           contains: keyword,
         },
         status_bayar: 0,
+        approved: 0
       };
+      //approved and waiting to payment
+      const params_waitpayment = {
+        nama: {
+          contains: keyword,
+        },
+        status_bayar: 0,
+        approved: 1
+      };
+
+      const params_paid = {
+        nama: {
+          contains: keyword,
+        },
+        status_bayar: 1,
+        approved: 1
+      };
+
+      const params_tolak = {
+        nama: {
+          contains: keyword,
+        },
+        status_bayar: 0,
+        approved: 2
+      };
+      let whereclaus = "";
+      if(status === 0){
+        whereclaus = params
+      } else if(status === 1 ){
+        whereclaus = params
+      } else if(status === 2){
+        whereclaus = params_waitpayment
+      } else if(status === 3){
+        whereclaus = params_tolak
+      } else if (status === 4) {
+         whereclaus = params_paid
+      }
 
       const [count, proposals] = await prisma.$transaction([
         prisma.proposal.count({
-          where: params,
+          where: whereclaus,
         }),
         prisma.proposal.findMany({
           include: {
@@ -389,7 +444,7 @@ module.exports = {
           orderBy: {
             [sortBy]: sortType,
           },
-          where: params,
+          where: whereclaus,
           skip,
           take: perPage,
         }),
