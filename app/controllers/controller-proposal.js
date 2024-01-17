@@ -559,25 +559,28 @@ module.exports = {
           take: perPage,
         }),
       ]);
-      // item.program_target_amount = undefined
+      // item.program_target_amount = undefined\
+      let danaapp = 0;
       const propResult = await Promise.all(
         proposals.map(async (item) => {
           //item.program_target_amount = undefined
+          danaapp = danaapp + Number(item.dana_approval)
           return {
-            ...item,
-            pogram_target_amount: Number(item.program_target_amount),            
+            ...item,            
+            //pogram_target_amount: Number(item.program_target_amount),            
             //total_donation: total_donation._sum.amount || 0,
           };
+          
         })
       );
 
-      var summarizes =  summarize.length > 0 ? 
-            summarize.map(summarize => summarize.dana_approval).reduce((acc, amount) => acc + amount):0
+      // var summarizes =  summarize.length > 0 ? 
+      //       summarize.map(summarize => summarize.dana_approval).reduce((acc, amount) => Number(summarize.dana_approval) + acc + amount):0
 
       res.status(200).json({
         // aggregate,
         message: "Sukses Ambil Data",
-        summarize: summarizes,
+        summarize: danaapp,
         data: propResult,
         pagination: {
           total: count,          
