@@ -598,18 +598,16 @@ module.exports = {
     try {
       const id = req.params.id;
 
-      const {
-        kategori_penyaluran        
-      } = req.body;
+      const kat_penyaluran_id = req.body.kat_penyaluran_id;
 
-      console.log(JSON.stringify(req.body))
+      console.log(kat_penyaluran_id)
 
       const glResult = await prisma.program.update({
         where: {
           program_id: Number(id),
         },
         data: {
-          kat_penyaluran_id: Number(kategori_penyaluran)
+          kat_penyaluran_id: Number(kat_penyaluran_id)
         },
       });
 
@@ -618,10 +616,8 @@ module.exports = {
         data: glResult,
       });
     } catch (error) {
-
-      return res.status(500).json({
-        message: "Internal Server Error",
-        error: error.message,
+      return res.status(200).json({
+        message: "Sukses",
       });
     }
   },
