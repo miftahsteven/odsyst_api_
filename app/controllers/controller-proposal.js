@@ -84,6 +84,25 @@ module.exports = {
         }
       }
 
+      const existingProposal = await prisma.proposal.findFirst({
+        where: {
+          program_id: Number(program_id),
+          nama,
+          create_date: {
+            gte: new Date(new Date() - 6 * 30 * 24 * 60 * 60 * 1000),
+          },
+          approved: {
+            not: 2,
+          },
+        },
+      });
+  
+      if (existingProposal) {
+        return res.status(400).json({
+          message: "Anda telah mengajukan proposal pada program berikut dalam kurun waktu 6 bulan",
+        });
+      }
+
       const ProposalResult = await prisma.proposal.create({
         data: {
           user: {
