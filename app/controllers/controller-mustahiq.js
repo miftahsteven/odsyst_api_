@@ -39,6 +39,7 @@ module.exports = {
         emergency_contact_number,
         bank_name,
         bank_number,
+        nama_imkas,
         imkas_number,
         is_institusi,
         institusi_nama,
@@ -81,6 +82,7 @@ module.exports = {
           bank_name,
           bank_number,
           bank_account_name,
+          nama_imkas,
           imkas_number,
         },
       });

@@ -5,6 +5,74 @@ const { customAlphabet } = require("nanoid");
 const { z } = require("zod");
 
 module.exports = {
+  async jurnalAll(req, res) {
+    try {
+      const keyword = req.query.keyword || "";
+      const sortBy = req.query.sortBy || "id";
+      const sortType = req.query.order || "asc";
+  
+      const params = {
+        OR: [
+          {
+            proposal: {
+              nama: {
+                contains: keyword,
+              },
+            },
+          },
+        ],
+      };
+  
+      const [count, gla] = await prisma.$transaction([
+        prisma.jurnal.count({
+          where: params,
+        }),
+        prisma.jurnal.findMany({
+          include: {
+            proposal: {
+              include: {
+                user: {
+                  include: {
+                    mustahiq: true,
+                  },
+                },
+              },
+            },
+            gl_account: true,
+            jurnal_category: true,
+            pettycash_request: true,
+          },
+          orderBy: {
+            [sortBy]: sortType,
+          },
+          where: params,
+        }),
+      ]);
+  
+      const glResult = await Promise.all(
+        gla.map(async (item) => {
+          return {
+            ...item,
+            //program_target_amount: Number(item.program_target_amount),
+            //total_donation: total_donation._sum.amount || 0,
+          };
+        })
+      );
+  
+      res.status(200).json({
+        message: "Sukses Ambil Data",
+        data: glResult,
+        pagination: {
+          total: count,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+  
   async jurnalPerintahBayar(req, res) {
     try {
       const page = Number(req.query.page || 1);

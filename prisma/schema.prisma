@@ -105,7 +105,6 @@ model user {
   proposal              proposal[]
   proposal_approval     proposal_approval[]
   recurring_transaction recurring_transaction[]
-  transactions          transactions[]
   mustahiq              mustahiq?               @relation(fields: [mustahiq_id], references: [id], onUpdate: NoAction)
   type                  UserType?               @relation(fields: [user_type], references: [user_type_id], onUpdate: NoAction)
 
@@ -143,6 +142,7 @@ model mustahiq {
   bank_name                String  @db.VarChar(255)
   bank_number              String  @db.VarChar(255)
   imkas_number             String? @db.VarChar(255)
+  nama_imkas               String? @db.VarChar(255)
   bank_account_name        String  @db.VarChar(255)
   user                     user?
 }
@@ -207,7 +207,6 @@ model transactions {
   status         String         @default("pending") @db.VarChar(100)
   notification   notification[]
   program        program        @relation(fields: [program_id], references: [program_id])
-  user           user           @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
   @@index([program_id], map: "transactions_program_id_fkey")
   @@index([user_id], map: "transactions_user_id_fkey")
@@ -292,7 +291,7 @@ model recurring_transaction {
   recurring_type   Int?     @default(0) @db.SmallInt
   reminder_type    Int?     @default(0) @db.SmallInt
   program          program? @relation(fields: [program_id], references: [program_id], onDelete: NoAction, onUpdate: NoAction, map: "recurring_transaction_program_id_FK")
-  user             user?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "recurring_transaction_user_id_FK")
+  user             user?    @relation(fields: [user_id], references: [user_id], onDelete: Restrict, onUpdate: Restrict, map: "recurring_transaction_user_id_FK")
 
   @@index([program_id], map: "recurring_transaction_program_id_FK")
   @@index([user_id], map: "recurring_transaction_user_id_FK")
@@ -471,9 +470,9 @@ model proposal {
   lampiran6                   String?              @db.Text
   lampiran7                   String?              @db.Text
   jurnal                      jurnal[]
-  user                        user?                @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "proposal_FK")
+  user                        user?                @relation(fields: [user_id], references: [user_id], onDelete: Restrict, onUpdate: Restrict, map: "proposal_FK")
   program                     program?             @relation(fields: [program_id], references: [program_id], onUpdate: SetNull, map: "proposal_FK_1")
-  kategori_penyaluran         kategori_penyaluran? @relation(fields: [kategori_penyaluran_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "proposal_FK_2")
+  kategori_penyaluran         kategori_penyaluran? @relation(fields: [kategori_penyaluran_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "proposal_FK_2")
   proposal_approval           proposal_approval[]
 
   @@index([user_id], map: "proposal_FK")
@@ -503,7 +502,7 @@ model proposal_approval {
   status      Int?      @default(0) @db.SmallInt
   flag        Int?      @default(0) @db.SmallInt
   amount      Int?
-  proposal    proposal? @relation(fields: [proposal_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "proposal_approval_FK")
+  proposal    proposal? @relation(fields: [proposal_id], references: [id], onDelete: Cascade, map: "proposal_approval_FK")
   user        user?     @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 
   @@index([proposal_id], map: "proposal_approval_FK")
@@ -688,4 +687,17 @@ model mutation_data_migrasi3 {
   asnaf_type        String?   @db.VarChar(100)
   deskripsi         String?   @db.Text
   program_category  String?   @db.VarChar(50)
+}
+
+model trans_imkas {
+  id            Int     @id @default(autoincrement())
+  nama          String? @db.VarChar(255)
+  nominal       Int?
+  keterangan    String? @db.Text
+  norekening    String? @db.VarChar(30)
+  iskyc         String? @db.VarChar(5)
+  isregistered  Int?    @default(0) @db.SmallInt
+  saldo_kemarin Int?    @default(0)
+  saldo_setelah Int?
+  status_inject Int?    @default(0) @db.SmallInt
 }
