@@ -24,6 +24,7 @@ router.get("/all", authentication, proposal.getAllProposal);
 router.get("/all-bayar", authentication, proposal.getAllProposalBayar);
 router.get("/penyaluranAll", authentication, proposal.kategoriPenyaluran);
 router.post("/approved", authentication, proposal.approvalProposal);
+router.put("/done/:id", authentication, proposal.doneProposal);
 router.post("/update/:id", authentication, proposal.updateProposal);
 router.put("/identified/:id", authentication, proposal.updateKategoriPenyaluran);
 //router.post("/upload", authentication, upload.single("lampiran"), proposal.registerProgram);

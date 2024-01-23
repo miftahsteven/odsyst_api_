@@ -99,7 +99,6 @@ model user {
   document_type         document_type[]
   ebs_validation        ebs_validation[]
   institusi             institusi[]
-  notifications         notification[]
   pettycash             pettycash[]
   pettycash_request     pettycash_request[]
   proposal              proposal[]
@@ -122,7 +121,6 @@ model notification {
   user_id        Int
   program        program?      @relation(fields: [program_id], references: [program_id])
   transaction    transactions? @relation(fields: [transaction_id], references: [id])
-  user           user          @relation(fields: [user_id], references: [user_id])
 
   @@index([program_id], map: "notification_program_id_fkey")
   @@index([transaction_id], map: "notification_transaction_id_fkey")
@@ -209,7 +207,7 @@ model transactions {
   program        program        @relation(fields: [program_id], references: [program_id])
 
   @@index([program_id], map: "transactions_program_id_fkey")
-  @@index([user_id], map: "transactions_user_id_fkey")
+  @@index([user_id], map: "transactions_user_FK")
 }
 
 model bank_account {
@@ -469,6 +467,9 @@ model proposal {
   lampiran5                   String?              @db.Text
   lampiran6                   String?              @db.Text
   lampiran7                   String?              @db.Text
+  nik_mustahiq                String?              @db.VarChar(20)
+  no_proposal                 String?              @db.VarChar(100)
+  ispaid                      Int?                 @default(0) @db.SmallInt
   jurnal                      jurnal[]
   user                        user?                @relation(fields: [user_id], references: [user_id], onDelete: Restrict, onUpdate: Restrict, map: "proposal_FK")
   program                     program?             @relation(fields: [program_id], references: [program_id], onUpdate: SetNull, map: "proposal_FK_1")

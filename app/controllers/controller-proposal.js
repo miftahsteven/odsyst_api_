@@ -1,5 +1,6 @@
 const { prisma } = require("../../prisma/client");
 const fs = require("fs");
+const { subMonths } = require('date-fns');
 
 module.exports = {
   async details(req, res) {
@@ -14,6 +15,7 @@ module.exports = {
       const userId = req.user_id;
       const program_id = req.body.program_id;
       const proposal_kategori = req.body.proposal_kategori;
+      const nik_mustahiq = req.body.nik_mustahiq;
       const nama = req.body.nama;
       const alamat_rumah = req.body.alamat_rumah;
       const kode_pos = req.body.kode_pos;
@@ -55,10 +57,10 @@ module.exports = {
       const no_telp_pemberi_rekomendasi = req.body.no_telp_pemberi_rekomendasi;
       const dana_yang_diajukan = req.body.dana_yang_diajukan;
 
-
       //console.log(JSON.stringify(req.body))
-
-      if (!nama) {
+      if (!nik_mustahiq) {
+        return res.status(400).json({ message: "NIK wajib diisi" });
+      } else if (!nama) {
         return res.status(400).json({ message: "Nama wajib diisi" });
       } else if (!userId) {
         return res.status(400).json({ message: "User ID wajib diisi" });
@@ -83,13 +85,18 @@ module.exports = {
           files[`lampiran${i}`] = "uploads/"+ file?.[0].filename;
         }
       }
-
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().slice(0, 10).replace(/-/g, '');
+      const empatnik = nik_mustahiq.slice(-4);
+      const no_proposal = formattedDate+empatnik;
+      const sixMonthsAgo = subMonths(new Date(), 6);
+      
       const existingProposal = await prisma.proposal.findFirst({
         where: {
           program_id: Number(program_id),
-          nama,
+          nik_mustahiq,
           create_date: {
-            gte: new Date(new Date() - 6 * 30 * 24 * 60 * 60 * 1000),
+            gte: sixMonthsAgo,
           },
           approved: {
             not: 2,
@@ -116,6 +123,8 @@ module.exports = {
             },
           },
           proposal_kategori: Number(proposal_kategori),
+          nik_mustahiq,
+          no_proposal,
           nama,
           alamat_rumah,
           kode_pos,
@@ -172,6 +181,37 @@ module.exports = {
     }
   },
 
+  async doneProposal(req, res) {
+    try {
+      const id = req.params.id
+      const ispaid = req.body.ispaid;
+
+      const proposal = await prisma.proposal.update({
+        where: {
+          id: Number(id),
+        },
+        data: {
+          ispaid,
+        },
+      });
+
+      if (!proposal) {
+        return res.status(400).json({
+          message: "Proposal tidak ditemukan",
+        });
+      }
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: "Berhasil Ubah Data",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+
   //////////////////
   async updateProposal(req, res) {
     try {
@@ -181,6 +221,7 @@ module.exports = {
         program_id,
         user_id,
         proposal_kategori,
+        nik_mustahiq,
         nama,
         alamat_rumah,
         kode_pos,
@@ -230,6 +271,7 @@ module.exports = {
       //console.log(JSON.stringify(req.body))
 
       if (
+        !nik_mustahiq ||
         !nama ||
         !id ||
         !user_id ||
@@ -241,7 +283,7 @@ module.exports = {
       ) {
         return res.status(400).json({
           message:
-            "Nama, dan Program Id, Kategori Proposal, nama alamat dan nomor telepon pemberi rekomendasi wajib diisi",
+            "NIK, Nama, dan Program Id, Kategori Proposal, nama alamat dan nomor telepon pemberi rekomendasi wajib diisi",
         });
       }
 
@@ -251,6 +293,7 @@ module.exports = {
         },
         data: {
           proposal_kategori: Number(proposal_kategori),
+          nik_mustahiq,
           nama,
           alamat_rumah,
           kode_pos,
