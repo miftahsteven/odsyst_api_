@@ -592,8 +592,10 @@ module.exports = {
             //program:true,
             program: {
               select:{  
+                program_title:true,
                 pogram_target_amount: false,
-                kategori_penyaluran: true
+                kategori_penyaluran: true,
+                program_category: true,
               },
               // include: {
                
