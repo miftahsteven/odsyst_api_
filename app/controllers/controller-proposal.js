@@ -499,6 +499,119 @@ module.exports = {
     }
   },
 
+  async getAllProcessProposal(req, res) {
+    const type = req.user_type;
+    try {
+      const page = Number(req.query.page || 1);
+      const perPage = Number(req.query.perPage || 10);
+      const status = Number(req.query.status || 0);
+      const skip = (page - 1) * perPage;
+      const keyword = req.query.nama || "";
+      const user_type = req.query.user_type || "";
+      const category = req.query.category || "";
+      const sortBy = req.query.sortBy || "create_date";
+      const sortType = req.query.order || "desc";
+      
+      
+      //const result = await prisma.$queryRaw`select * from proposal p  where  p.id not in (select pa.proposal_id  from proposal_approval pa Join user u on pa.user_id = u.user_id where u.user_type = 14 and pa.status = 1 and pa.proposal_id is not NULL) and p.approved = 0 and p.status_bayar = 0`
+
+      const [count, proposals] = await prisma.$transaction([
+        prisma.proposal.count({
+          where: {
+            id: {
+              not :{
+                proposal_approval:{
+                  select: {proposal_id: true},
+                  where: {
+                    user_type: 14,
+                    status: 1,
+                    proposal_id: !null
+                  }
+                }
+              }  
+            }
+            //prisma.$subQueryRaw`select pa.proposal_id  from proposal_approval pa Join user u on pa.user_id = u.user_id where u.user_type = 14 and pa.status = 1 and pa.proposal_id is not NULL` },
+            //approved = 0,
+            //status_bayar = 0
+          },
+        }),
+        //prisma.$queryRaw`select count(p.id) from proposal p  where  p.id not in (select pa.proposal_id  from proposal_approval pa Join user u on pa.user_id = u.user_id where u.user_type = 14 and pa.status = 1 and pa.proposal_id is not NULL) and p.approved = 0 and p.status_bayar = 0 group by p.id`,
+        prisma.$queryRaw`select * from proposal p  where  p.id not in (select pa.proposal_id  from proposal_approval pa Join user u on pa.user_id = u.user_id where u.user_type = 14 and pa.status = 1 and pa.proposal_id is not NULL) and p.approved = 0 and p.status_bayar = 0`
+        // prisma.proposal.findMany({
+        //   include: {
+        //     user: {
+        //       select: {
+        //         mustahiq: true,
+        //         user_id: true,
+        //         user_nama: true,
+        //         username: true,
+        //         user_phone: true,
+        //       },              
+        //     },
+        //     //program:true,
+        //     program: {
+        //       select:{  
+        //         pogram_target_amount: false,
+        //         kategori_penyaluran: true
+        //       },
+        //       // include: {
+               
+        //       // }
+        //     },
+        //     proposal_approval: {
+        //       include: {
+        //         user: {
+        //           select: {
+        //             user_id: true,
+        //             user_nama: true,
+        //             username: true,
+        //             user_phone: true,
+        //             user_type: true
+        //           },
+        //         },
+        //       },
+        //     },
+        //   },
+        //   orderBy: {
+        //     [sortBy]: sortType,
+        //   },
+        //   where: whereclaus,
+        //   skip,
+        //   take: perPage,
+        // }),
+      ]);
+      // item.program_target_amount = undefined
+      const propResult = await Promise.all(
+        proposals.map(async (item) => {
+          //item.program_target_amount = undefined
+          return {
+            ...item,
+            //pogram_target_amount: Number(item.program_target_amount),            
+            //total_donation: total_donation._sum.amount || 0,
+          };
+        })
+      );
+       // const count=10
+       console.log("test", count);
+      res.status(200).json({
+        // aggregate,
+        message: "Sukses Ambil Data",
+
+        data: propResult,
+        pagination: {
+          total: count,
+          page,
+          hasNext: count > page * perPage,
+          totalPage: Math.ceil(count / perPage),
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+
   async getAllProposalBayar(req, res) {
     try {
       const page = Number(req.query.page || 1);
