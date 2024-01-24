@@ -221,7 +221,6 @@ module.exports = {
         program_id,
         user_id,
         proposal_kategori,
-        nik_mustahiq,
         nama,
         alamat_rumah,
         kode_pos,
@@ -271,7 +270,6 @@ module.exports = {
       //console.log(JSON.stringify(req.body))
 
       if (
-        !nik_mustahiq ||
         !nama ||
         !id ||
         !user_id ||
@@ -283,7 +281,7 @@ module.exports = {
       ) {
         return res.status(400).json({
           message:
-            "NIK, Nama, dan Program Id, Kategori Proposal, nama alamat dan nomor telepon pemberi rekomendasi wajib diisi",
+            "Nama, dan Program Id, Kategori Proposal, nama alamat dan nomor telepon pemberi rekomendasi wajib diisi",
         });
       }
 
@@ -293,7 +291,6 @@ module.exports = {
         },
         data: {
           proposal_kategori: Number(proposal_kategori),
-          nik_mustahiq,
           nama,
           alamat_rumah,
           kode_pos,
