@@ -115,17 +115,17 @@ module.exports = {
               select: {
                 amount: true,
                 id: true,
-                user: {
-                  select: {
-                    user_id: true,
-                    user_nama: true,
-                  },
-                },
+                // user: {
+                //   select: {
+                //     user_id: true,
+                //     user_nama: true,
+                //   },
+                // },
               },
             },
           },
         }),
-
+      
         prisma.transactions.aggregate({
           where: {
             program_id: parseInt(id),
