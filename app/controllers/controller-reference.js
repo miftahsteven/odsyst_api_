@@ -745,4 +745,31 @@ module.exports = {
       });
     }
   },
+
+  async institusi(req, res) {
+    try {
+      const id = req.params.id;
+
+      const institusi = await prisma.institusi.findMany({
+        where: {
+          institusi_user_id: Number(id)
+        },
+      });
+
+      if (!institusi) {
+        return res.status(404).json({
+          message: "City tidak ditemukan",
+        });
+      }
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: institusi,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
 }

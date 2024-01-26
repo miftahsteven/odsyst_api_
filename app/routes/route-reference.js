@@ -26,4 +26,5 @@ router.post("/addArticle",authentication, upload.single("banner"), refData.regis
 router.put("/editArticle/:id",authentication, upload.single("banner"), refData.updateArticle)
 router.delete("/delArticle/:id",authentication, refData.deleteArticle)
 
+router.get("/institusi/:id", refData.institusi)
 module.exports = router;
