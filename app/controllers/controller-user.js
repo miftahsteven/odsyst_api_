@@ -109,7 +109,7 @@ module.exports = {
 
       const currentUser = await prisma.user.findFirst({
         where: {
-          OR: [{ user_phone: body.data.phone }],
+          OR: [{ username: body.data.email }, { user_phone: body.data.phone }],
         },
       });
 
