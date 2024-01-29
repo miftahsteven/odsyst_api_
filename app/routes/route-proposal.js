@@ -23,6 +23,7 @@ router.get("/details/:id", authentication, proposal.detailProposal);
 router.get("/all", authentication, proposal.getAllProposal);
 router.get("/all-bayar", authentication, proposal.getAllProposalBayar);
 router.get("/all-process", authentication, proposal.getAllProcessProposal);
+router.get("/all-approver", authentication, proposal.getAllApproverProposal);
 router.get("/penyaluranAll", authentication, proposal.kategoriPenyaluran);
 router.post("/approved", authentication, proposal.approvalProposal);
 router.put("/done/:id", authentication, proposal.doneProposal);

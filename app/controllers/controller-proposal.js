@@ -543,8 +543,8 @@ module.exports = {
 
   async getAllProcessProposal(req, res) {
     try {
-      const userId = Number(req.user_id || 0)
-      const type = Number(req.user_type || 13)
+      const userId = Number(req.user.user_id || 0)
+      const userType = Number(req.user.user_type || 0)
       const page = Number(req.query.page || 1);
       const perPage = Number(req.query.perPage || 10);
       const status = Number(req.query.status || 0);
@@ -554,23 +554,19 @@ module.exports = {
       const category = req.query.category || "";
       const sortBy = req.query.sortBy || "create_date";
       const sortType = req.query.order || "desc";
-      const arrId = []
+      let arrId = []
 
-      //--->
-      // console.log("LOG TYPE", type);
-      // let cekdata;
-      // if(type === 14){
-      //   cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa JOIN user u on pa.user_id = u.user_id where u.user_type in (14) and pa.proposal_id is not NULL GROUP BY pa.proposal_id` 
-      // }else if(type === 13){
-      //   cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa JOIN user u on pa.user_id = u.user_id where u.user_type in (14) and  and pa.user_id <> ${userId} and pa.status <> 2 and pa.proposal_id is not NULL GROUP BY pa.proposal_id` 
-      // } 
-
-      //console.log("LOG TYPE", cekdata);
-      const cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa JOIN user u on pa.user_id = u.user_id where u.user_type in (14) and pa.proposal_id is not NULL GROUP BY pa.proposal_id` 
-
-      cekdata.map(item => 
+      
+      cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa JOIN user u on pa.user_id = u.user_id where u.user_type in (14) and pa.proposal_id is not NULL GROUP BY pa.proposal_id` 
+       
+      //const cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa JOIN user u on pa.user_id = u.user_id where u.user_type in (14) and pa.proposal_id is not NULL GROUP BY pa.proposal_id` 
+      
+      cekdata.map(item => {
         arrId.push(item.id)
-      )
+      })
+
+      //console.log("LOG TYPESSXX", JSON.stringify(arrId));
+      
 
       const params = {     
         AND:[{   
@@ -578,6 +574,120 @@ module.exports = {
             approved: 0,
             status_bayar: 0,
             id : {notIn :  arrId}
+          }]
+      };
+      
+      const [count, proposals] = await prisma.$transaction([
+        prisma.proposal.count({
+          where: params,
+        }),
+        prisma.proposal.findMany({
+          include: {
+            user: {
+              select: {
+                mustahiq: true,
+                user_id: true,
+                user_nama: true,
+                username: true,
+                user_phone: true,
+              },              
+            },
+            //program:true,
+            program: {
+              select:{  
+                pogram_target_amount: false,
+                kategori_penyaluran: true
+              },
+              // include: {
+               
+              // }
+            },
+            proposal_approval: {
+              include: {
+                user: {
+                  select: {
+                    user_id: true,
+                    user_nama: true,
+                    username: true,
+                    user_phone: true,
+                    user_type: true
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            [sortBy]: sortType,
+          },
+          where: params,
+          skip,
+          take: perPage,
+        }),
+      ]);
+      
+      // item.program_target_amount = undefined
+      const propResult = await Promise.all(
+        proposals.map(async (item) => {
+          //item.program_target_amount = undefined
+          return {
+            ...item,
+            //pogram_target_amount: Number(item.program_target_amount),            
+            //total_donation: total_donation._sum.amount || 0,
+          };
+        })
+      );
+        
+      res.status(200).json({
+        // aggregate,
+        message: "Sukses Ambil Data",
+
+        data: propResult,
+        pagination: {
+          total: count,
+          page,
+          hasNext: count > page * perPage,
+          totalPage: Math.ceil(count / perPage),
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+
+  async getAllApproverProposal(req, res) {
+    try {
+      const userId = Number(req.user.user_id || 0)
+      const userType = Number(req.user.user_type || 0)
+      const page = Number(req.query.page || 1);
+      const perPage = Number(req.query.perPage || 10);
+      const status = Number(req.query.status || 0);
+      const skip = (page - 1) * perPage;
+      const keyword = req.query.nama || "";
+      const user_type = req.query.user_type || "";
+      const category = req.query.category || "";
+      const sortBy = req.query.sortBy || "create_date";
+      const sortType = req.query.order || "desc";
+      let arrId = []
+
+      //const cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa where (select count(b.id) from proposal_approval b where pa.proposal_id = b.proposal_id) < 5 and pa.user_id in (${userId}) GROUP BY pa.proposal_id`
+      const cekdata = await prisma.$queryRaw`select p.id as id  FROM proposal p
+      JOIN  proposal_approval pa ON pa.proposal_id = p.id 
+      JOIN user u ON pa.user_id = u.user_id 
+      WHERE (pa.user_id = ${userId} OR u.user_type = 14) GROUP  by p.id`
+
+      console.log("WABARR", JSON.stringify(cekdata));
+      cekdata.map(item => {        
+        arrId.push(item.id)       
+      })
+
+      const params = {     
+        AND:[{   
+            nama: {  contains: keyword},
+            approved: 0,
+            status_bayar: 0,
+            id : {in :  arrId}
           }]
       };
       
