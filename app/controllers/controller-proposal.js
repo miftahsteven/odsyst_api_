@@ -1,6 +1,8 @@
 const { prisma } = require("../../prisma/client");
+const { Prisma } = require("@prisma/client");
 const fs = require("fs");
 const { subMonths } = require('date-fns');
+const { some } = require("lodash");
 
 module.exports = {
   async details(req, res) {
@@ -540,8 +542,9 @@ module.exports = {
   },
 
   async getAllProcessProposal(req, res) {
-    const type = req.user_type;
     try {
+      const userId = Number(req.user_id || 0)
+      const type = Number(req.user_type || 13)
       const page = Number(req.query.page || 1);
       const perPage = Number(req.query.perPage || 10);
       const status = Number(req.query.status || 0);
@@ -551,75 +554,81 @@ module.exports = {
       const category = req.query.category || "";
       const sortBy = req.query.sortBy || "create_date";
       const sortType = req.query.order || "desc";
-      
-      
-      //const result = await prisma.$queryRaw`select * from proposal p  where  p.id not in (select pa.proposal_id  from proposal_approval pa Join user u on pa.user_id = u.user_id where u.user_type = 14 and pa.status = 1 and pa.proposal_id is not NULL) and p.approved = 0 and p.status_bayar = 0`
+      const arrId = []
 
+      //--->
+      // console.log("LOG TYPE", type);
+      // let cekdata;
+      // if(type === 14){
+      //   cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa JOIN user u on pa.user_id = u.user_id where u.user_type in (14) and pa.proposal_id is not NULL GROUP BY pa.proposal_id` 
+      // }else if(type === 13){
+      //   cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa JOIN user u on pa.user_id = u.user_id where u.user_type in (14) and  and pa.user_id <> ${userId} and pa.status <> 2 and pa.proposal_id is not NULL GROUP BY pa.proposal_id` 
+      // } 
+
+      //console.log("LOG TYPE", cekdata);
+      const cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa JOIN user u on pa.user_id = u.user_id where u.user_type in (14) and pa.proposal_id is not NULL GROUP BY pa.proposal_id` 
+
+      cekdata.map(item => 
+        arrId.push(item.id)
+      )
+
+      const params = {     
+        AND:[{   
+            nama: {  contains: keyword},
+            approved: 0,
+            status_bayar: 0,
+            id : {notIn :  arrId}
+          }]
+      };
+      
       const [count, proposals] = await prisma.$transaction([
         prisma.proposal.count({
-          where: {
-            id: {
-              not :{
-                proposal_approval:{
-                  select: {proposal_id: true},
-                  where: {
-                    user_type: 14,
-                    status: 1,
-                    proposal_id: !null
-                  }
-                }
-              }  
-            }
-            //prisma.$subQueryRaw`select pa.proposal_id  from proposal_approval pa Join user u on pa.user_id = u.user_id where u.user_type = 14 and pa.status = 1 and pa.proposal_id is not NULL` },
-            //approved = 0,
-            //status_bayar = 0
-          },
+          where: params,
         }),
-        //prisma.$queryRaw`select count(p.id) from proposal p  where  p.id not in (select pa.proposal_id  from proposal_approval pa Join user u on pa.user_id = u.user_id where u.user_type = 14 and pa.status = 1 and pa.proposal_id is not NULL) and p.approved = 0 and p.status_bayar = 0 group by p.id`,
-        prisma.$queryRaw`select * from proposal p  where  p.id not in (select pa.proposal_id  from proposal_approval pa Join user u on pa.user_id = u.user_id where u.user_type = 14 and pa.status = 1 and pa.proposal_id is not NULL) and p.approved = 0 and p.status_bayar = 0`
-        // prisma.proposal.findMany({
-        //   include: {
-        //     user: {
-        //       select: {
-        //         mustahiq: true,
-        //         user_id: true,
-        //         user_nama: true,
-        //         username: true,
-        //         user_phone: true,
-        //       },              
-        //     },
-        //     //program:true,
-        //     program: {
-        //       select:{  
-        //         pogram_target_amount: false,
-        //         kategori_penyaluran: true
-        //       },
-        //       // include: {
+        prisma.proposal.findMany({
+          include: {
+            user: {
+              select: {
+                mustahiq: true,
+                user_id: true,
+                user_nama: true,
+                username: true,
+                user_phone: true,
+              },              
+            },
+            //program:true,
+            program: {
+              select:{  
+                pogram_target_amount: false,
+                kategori_penyaluran: true
+              },
+              // include: {
                
-        //       // }
-        //     },
-        //     proposal_approval: {
-        //       include: {
-        //         user: {
-        //           select: {
-        //             user_id: true,
-        //             user_nama: true,
-        //             username: true,
-        //             user_phone: true,
-        //             user_type: true
-        //           },
-        //         },
-        //       },
-        //     },
-        //   },
-        //   orderBy: {
-        //     [sortBy]: sortType,
-        //   },
-        //   where: whereclaus,
-        //   skip,
-        //   take: perPage,
-        // }),
+              // }
+            },
+            proposal_approval: {
+              include: {
+                user: {
+                  select: {
+                    user_id: true,
+                    user_nama: true,
+                    username: true,
+                    user_phone: true,
+                    user_type: true
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            [sortBy]: sortType,
+          },
+          where: params,
+          skip,
+          take: perPage,
+        }),
       ]);
+      
       // item.program_target_amount = undefined
       const propResult = await Promise.all(
         proposals.map(async (item) => {
@@ -631,8 +640,7 @@ module.exports = {
           };
         })
       );
-       // const count=10
-       console.log("test", count);
+        
       res.status(200).json({
         // aggregate,
         message: "Sukses Ambil Data",
