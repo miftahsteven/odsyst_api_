@@ -9,6 +9,7 @@ const mt940js = require('mt940js');
 const parser  = new mt940js.Parser();
 const fs = require('fs');
 const { z } = require("zod");
+const readXlsxFile = require('read-excel-file/node')
 
 // pool.on('error',(err)=> {
 //     console.error(err);
@@ -92,6 +93,53 @@ module.exports ={
     
     },
 
+    async getDataImkas (req, res){
+      try{
+     
+          const {id, filename } = req.body
+          
+          let dataTrans = [];                 
+           const dataexcel = await readXlsxFile('uploads/'+filename).then((rows) => {
+           
+                  rows.map((items, i) =>                     
+                    dataTrans.push({                
+                      file_id: Number(id),
+                      nama: rows[i][1],
+                      no_imkas: rows[i][2],
+                      nominal: Number(rows[i][3]),
+                      rekening: String(rows[i][6]),
+                      nama_imkas: rows[i][7],
+                      keterangan: rows[i][4],
+                      saldo_awal: Number(rows[i][10]),
+                      saldo_akhir: Number(rows[i][11]),
+                      status: Number(rows[i][13])
+                    })
+                  )                  
+                    //console.log("SEMUA DATA GAP",JSON.stringify(dataTrans));  
+                    dataTrans.splice(0,1)
+
+                    return dataTrans;
+                   
+          })      
+                  //console.log("SEMUA DATA GAPSss",JSON.stringify(dataexcel));    
+
+         
+            await prisma.imkas_payment_statement.createMany({
+              data: dataexcel,
+            });       
+    
+          res.status(200).json({
+            message: "Sukses Generate Data MT940",
+          });
+
+      } catch (error){
+        res.status(500).json({
+          message: error?.message,
+        });
+      }
+
+    },
+
     async parsemt940 (req, res){
 
         const statements = parser.parse({
@@ -156,6 +204,86 @@ module.exports ={
             return {
               ...item
               //program_target_amount: Number(item.program_target_amount),
+              //total_donation: total_donation._sum.amount || 0,
+            };
+          })
+        );
+  
+        res.status(200).json({
+          // aggregate,
+          message: "Sukses Ambil Data",
+  
+          data: bankResult,
+          pagination: {
+            total: count,
+            page,
+            hasNext: count > page * perPage,
+            totalPage: Math.ceil(count / perPage),
+          },
+        });
+      } catch (error) {
+        res.status(500).json({
+          message: error?.message,
+        });
+      }
+    },
+    async dataImkasDetail(req, res) {
+      const id = req.params.id
+      try {
+        const page = Number(req.query.page || 1);
+        const perPage = Number(req.query.perPage || 10);
+        const status = Number(req.query.status || 4);
+        const skip = (page - 1) * perPage;
+        const keyword = req.query.keyword || "";
+        const user_type = req.query.user_type || "";
+        const category = req.query.category || "";
+        const sortBy = req.query.sortBy || "id";
+        const sortType = req.query.order || "asc";
+  
+        const params = {      
+          AND: [
+            {file_id: Number(id)},
+            {
+              keterangan: {
+                contains: keyword,
+              },  
+            }
+          ]     
+        };
+  
+        const [count, bank] = await prisma.$transaction([
+          prisma.imkas_payment_statement.count({
+            where: params,
+          }),
+          prisma.imkas_payment_statement.findMany({              
+            orderBy: {
+              [sortBy]: sortType,
+            },
+            select: {
+                id: true,
+                create_date: true,
+                file_id: true,
+                nama: true,
+                no_imkas: true,
+                nominal: true,
+                rekening: true,
+                nama_imkas: true,
+                keterangan: true,
+                status: true
+            },
+            where: params,         
+            skip,
+            take: perPage,
+          }),
+        ]);
+  
+        const bankResult = await Promise.all(
+          bank.map(async (item) => {
+            
+  
+            return {
+              ...item,
+              nominal: Number(item.nominal),
               //total_donation: total_donation._sum.amount || 0,
             };
           })
@@ -365,7 +493,7 @@ module.exports ={
         }
 
         // Array of allowed files
-        const array_of_allowed_files = ['txt'];
+        const array_of_allowed_files = ['txt','xlsx','xls'];
 
         // Get the extension of the uploaded file
         const file_extension = file.originalname.slice(
