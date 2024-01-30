@@ -25,15 +25,17 @@
 FROM --platform=linux/amd64 node:18-alpine
 # Create app directory
 WORKDIR /usr/src/app
-RUN mkdir /usr/src/uploads
-RUN touch /usr/src/app/uploads
-RUN mv /usr/src/app/uploads ../uploads/
+
+#RUN mkdir /usr/src/uploads
+#RUN touch /usr/src/app/uploads
+#RUN mv /usr/src/app/uploads ../uploads/
 
 RUN apk update
 
 RUN apk add git
+#RUN apk add zip
 
-RUN git clone https://github.com/miftahsteven/zis-api.git .
+RUN git clone https://github.com/develsde/zis-api.git .
 
 
 RUN npm install pm2 -g
@@ -47,7 +49,9 @@ RUN npm install
 #COPY prisma prisma/
 #COPY .dockerignore .
 #COPY Dockerfile .
-COPY uploads.zip .
+#COPY uploads.zip .
+#RUN unzip uploads.zip
+#RUN rm -rf uploads.zip
 
 #COPY . .
 #RUN mv /usr/src/uploads /usr/src/app/uploads/

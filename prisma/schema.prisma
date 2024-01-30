@@ -214,6 +214,7 @@ model bank_account {
   id          Int       @id @default(autoincrement())
   bank_name   String    @db.VarChar(255)
   bank_number String    @db.VarChar(255)
+  isbank      Int?      @default(1) @db.SmallInt
   mt_file     mt_file[]
 }
 
@@ -323,6 +324,7 @@ model gl_account {
   bank_account      Int?
   doc_number        Int?
   asnaf_type_id     Int?
+  parent_id         String?
   ebs_validation    ebs_validation[]
   document_number   document_number?    @relation(fields: [doc_number], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "gl_account_FK_1")
   gl_account_type   gl_account_type?    @relation(fields: [gl_type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "gl_account_type_FK")
@@ -470,6 +472,10 @@ model proposal {
   nik_mustahiq                String?              @db.VarChar(20)
   no_proposal                 String?              @db.VarChar(100)
   ispaid                      Int?                 @default(0) @db.SmallInt
+  tgl                         DateTime?            @db.Timestamp(0)
+  referentor                  String?              @db.VarChar(100)
+  no_hp_referentor            String?              @db.VarChar(15)
+  nama_akun                   String?              @db.VarChar(255)
   jurnal                      jurnal[]
   user                        user?                @relation(fields: [user_id], references: [user_id], onDelete: Restrict, onUpdate: Restrict, map: "proposal_FK")
   program                     program?             @relation(fields: [program_id], references: [program_id], onUpdate: SetNull, map: "proposal_FK_1")
@@ -482,15 +488,16 @@ model proposal {
 }
 
 model mt_file {
-  id           Int           @id @default(autoincrement())
-  filename     String?       @db.VarChar(255)
-  path         String?       @db.Text
-  date         DateTime?     @default(now()) @db.Timestamp(0)
-  bank         Int?
-  no_rekening  String?       @db.VarChar(25)
-  user_id      Int?
-  ebs_staging  ebs_staging[]
-  bank_account bank_account? @relation(fields: [bank], references: [id], onUpdate: SetNull, map: "mt_file_FK")
+  id                      Int                       @id @default(autoincrement())
+  filename                String?                   @db.VarChar(255)
+  path                    String?                   @db.Text
+  date                    DateTime?                 @default(now()) @db.Timestamp(0)
+  bank                    Int?
+  no_rekening             String?                   @db.VarChar(25)
+  user_id                 Int?
+  ebs_staging             ebs_staging[]
+  imkas_payment_statement imkas_payment_statement[]
+  bank_account            bank_account?             @relation(fields: [bank], references: [id], onUpdate: SetNull, map: "mt_file_FK")
 
   @@index([bank], map: "mt_file_FK")
 }
@@ -701,4 +708,22 @@ model trans_imkas {
   saldo_kemarin Int?    @default(0)
   saldo_setelah Int?
   status_inject Int?    @default(0) @db.SmallInt
+}
+
+model imkas_payment_statement {
+  id          Int      @id @default(autoincrement())
+  create_date DateTime @default(now()) @db.Timestamp(0)
+  file_id     Int
+  nama        String?  @db.VarChar(255)
+  no_imkas    String?  @db.VarChar(20)
+  nominal     Int?
+  rekening    String?  @db.VarChar(20)
+  nama_imkas  String?  @db.VarChar(100)
+  keterangan  String?  @db.Text
+  saldo_awal  Int?
+  saldo_akhir Int?
+  status      Int?     @db.SmallInt
+  mt_file     mt_file  @relation(fields: [file_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "imkas_payment_statement_mt_file_FK")
+
+  @@index([file_id], map: "imkas_payment_statement_mt_file_FK")
 }
