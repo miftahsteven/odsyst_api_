@@ -147,7 +147,7 @@ module.exports = {
             },
           },
           skip,
-          take: perPage,
+          // take: perPage,
         }),
       ]);
 
@@ -156,12 +156,12 @@ module.exports = {
         message: "Sukses Ambil Data",
 
         data: proposal,
-        pagination: {
-          total: count,
-          page,
-          hasNext: count > page * perPage,
-          totalPage: Math.ceil(count / perPage),
-        },
+        // pagination: {
+        //   total: count,
+        //   page,
+        //   hasNext: count > page * perPage,
+        //   totalPage: Math.ceil(count / perPage),
+        // },
       });
     } catch (error) {
       res.status(500).json({
