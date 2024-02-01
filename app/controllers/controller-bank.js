@@ -105,7 +105,7 @@ module.exports ={
                     dataTrans.push({                
                       file_id: Number(id),
                       nama: rows[i][1],
-                      no_imkas: rows[i][2],
+                      no_imkas: (rows[i][2]).toString(),
                       nominal: Number(rows[i][3]),
                       rekening: String(rows[i][6]),
                       nama_imkas: rows[i][7],
@@ -115,7 +115,7 @@ module.exports ={
                       status: Number(rows[i][13])
                     })
                   )                  
-                    //console.log("SEMUA DATA GAP",JSON.stringify(dataTrans));  
+                    console.log("SEMUA DATA GAP",JSON.stringify(dataTrans));  
                     dataTrans.splice(0,1)
 
                     return dataTrans;
