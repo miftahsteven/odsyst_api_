@@ -207,18 +207,20 @@ module.exports = {
         });
       }
 
-      let pn = "+62 855-8833-244"     
-      if(pn.substring(0, 1) == '0'){        
-          pn = "62"+pn.substring(1).trim()
-      } else if(pn.substring(0,3) == '+62') {
-          pn = "62"+pn.substring(3).trim()
+      if(ispaid == 1) {
+
+          let pn = "+62 855-8833-244"     
+          if(pn.substring(0, 1) == '0'){        
+              pn = "62"+pn.substring(1).trim()
+          } else if(pn.substring(0,3) == '+62') {
+              pn = "62"+pn.substring(3).trim()
+          }
+
+          const msgId = await sendWhatsapp({
+            wa_number: pn.replace(/[^0-9\.]+/g, ""),       
+            text: "Proposal Atas Nama "+nama+", Telah disetujui dan telah ditransfer. Terima kasih",
+          });
       }
-
-      const msgId = await sendWhatsapp({
-        wa_number: pn.replace(/[^0-9\.]+/g, ""),       
-        text: "Proposal Atas Nama "+nama+", Telah disetujui dan telah ditransfer. Terima kasih",
-      });
-
       
       return res.status(200).json({
         message: "Sukses",
