@@ -3,6 +3,8 @@ const { Prisma } = require("@prisma/client");
 const fs = require("fs");
 const { subMonths } = require('date-fns');
 const { some } = require("lodash");
+const { sendWhatsapp } = require("../helper/whatsapp");
+const phoneFormatter = require('phone-formatter');
 
 module.exports = {
   async details(req, res) {
@@ -187,6 +189,8 @@ module.exports = {
     try {
       const id = req.params.id
       const ispaid = req.body.ispaid;
+      const nama = req.body.nama;
+      const ref = req.body.ref;
 
       const proposal = await prisma.proposal.update({
         where: {
@@ -203,6 +207,19 @@ module.exports = {
         });
       }
 
+      let pn = "+62 855-8833-244"     
+      if(pn.substring(0, 1) == '0'){        
+          pn = "62"+pn.substring(1).trim()
+      } else if(pn.substring(0,3) == '+62') {
+          pn = "62"+pn.substring(3).trim()
+      }
+
+      const msgId = await sendWhatsapp({
+        wa_number: pn.replace(/[^0-9\.]+/g, ""),       
+        text: "Proposal Atas Nama "+nama+", Telah disetujui dan telah ditransfer. Terima kasih",
+      });
+
+      
       return res.status(200).json({
         message: "Sukses",
         data: "Berhasil Ubah Data",
@@ -424,7 +441,7 @@ module.exports = {
           contains: keyword,
         },
         status_bayar: 0,
-        approved: 0
+        approved: 0,
       };
       //approved and waiting to payment
       const params_waitpayment = {
@@ -435,12 +452,22 @@ module.exports = {
         approved: 1
       };
 
+      const params_siapbayar = {
+        nama: {
+          contains: keyword,
+        },
+        status_bayar: 1,
+        approved: 1,
+        ispaid:0
+      };
+
       const params_paid = {
         nama: {
           contains: keyword,
         },
         status_bayar: 1,
-        approved: 1
+        approved: 1,
+        ispaid: 1
       };
 
       const params_tolak = {
@@ -460,8 +487,10 @@ module.exports = {
       } else if(status === 3){
         whereclaus = params_tolak
       } else if (status === 4) {
-         whereclaus = params_paid
-      }
+         whereclaus = params_siapbayar
+      } else if (status === 5) {
+        whereclaus = params_paid
+     }
 
       const [count, proposals] = await prisma.$transaction([
         prisma.proposal.count({
