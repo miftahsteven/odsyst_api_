@@ -9,6 +9,7 @@ router.get("/jurnalall", authentication, jurnal.jurnalAll);
 router.get("/perintahbayar", authentication, jurnal.jurnalPerintahBayar);
 router.get("/category", authentication, jurnal.jurnalCategory);
 router.post("/create", authentication, jurnal.createJurnal);
+router.post("/create-penerimaan", authentication, jurnal.createJurnalPenerimaan);
 router.post("/createjurnalptc", authentication, jurnal.createJurnalPettyCash);
 
 module.exports = router;

@@ -159,6 +159,38 @@ module.exports ={
 
     },
 
+    async updateStatusMT(req, res) {
+      try {
+        const userId = req.user_id;
+        const { idmt } = req.body;
+  
+        if (!idmt) {
+          return res.status(400).json({
+            message: "Jurnal ID Kosong",
+          });
+        }
+  
+        await prisma.ebs_staging.update({
+          where: {
+            id: Number(idmt),
+          },
+          data: {
+            identified: 1,           
+            identified_user_id: userId
+          },
+        });
+  
+        return res.status(200).json({
+          message: "Sukses",
+          data: "Berhasil Update Mt940",
+        });
+      } catch (error) {
+        return res.status(500).json({
+          message: error?.message,
+        });
+      }
+    },
+
     async dataMt940(req, res) {
       const id = req.params.id
       try {

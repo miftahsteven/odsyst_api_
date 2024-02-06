@@ -209,7 +209,7 @@ module.exports = {
 
       if(ispaid == 1) {
 
-          let pn = "+62 855-8833-244"     
+          let pn = ref
           if(pn.substring(0, 1) == '0'){        
               pn = "62"+pn.substring(1).trim()
           } else if(pn.substring(0,3) == '+62') {
@@ -703,12 +703,14 @@ module.exports = {
       let arrId = []
 
       //const cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa where (select count(b.id) from proposal_approval b where pa.proposal_id = b.proposal_id) < 5 and pa.user_id in (${userId}) GROUP BY pa.proposal_id`
-      const cekdata = await prisma.$queryRaw`select p.id as id  FROM proposal p
+      const cekdata = await prisma.$queryRaw`select p.id as id, count(pa.id) as jumlah  FROM proposal p
       JOIN  proposal_approval pa ON pa.proposal_id = p.id 
       JOIN user u ON pa.user_id = u.user_id 
-      WHERE (pa.user_id = ${userId} OR u.user_type = 14) GROUP  by p.id`
+      WHERE (pa.user_id = ${userId} OR u.user_type = 14)  GROUP by pa.id HAVING COUNT(p.id) < 4`
 
-      console.log("WABARR", JSON.stringify(cekdata));
+      //const cekdata = await prisma.$queryRaw`select p.proposal_id as id, p.user_id  from proposal_approval p where p.proposal_id is not null having p.user_id != ${userId} order by p.proposal_id`
+
+      //console.log("WABARR", JSON.stringify(cekdata));
       cekdata.map(item => {        
         arrId.push(item.id)       
       })

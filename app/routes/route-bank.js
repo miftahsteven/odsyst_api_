@@ -12,6 +12,7 @@ const fs = require("fs/promises");
 // GET localhost:8080/home => Ambil data semua dari awal
 router.post('/mt940', authentication, bank.getDataMt940);
 router.post('/imkas', authentication, bank.getDataImkas);
+router.put('/identified', authentication, bank.updateStatusMT);
 router.get('/alldata/:id', authentication, bank.dataMt940);
 router.get('/allimkas/:id', authentication, bank.dataImkasDetail);
 router.get('/allfile', authentication, bank.dataFileMt940);

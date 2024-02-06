@@ -236,6 +236,71 @@ module.exports = {
       });
     }
   },
+
+  async createJurnalPenerimaan(req, res) {
+    try {
+      //const userId = req.user_id;
+
+      const {
+        glaccount,
+        deskripsi,
+        jurnal_category_id,
+        iscredit,
+        isdebit,
+        amount_credit,
+        amount_debit,
+        transaction_proposal_id,
+        transaction_petty_cast_id,
+        transaction_muzaki_id,
+        transaction_mustahiq_id,
+        transaction_program_id,
+      } = req.body;
+
+      //console.log(JSON.stringify(req.body))
+
+      const glResult = await prisma.jurnal.create({
+        data: {
+          gl_account: {
+            connect: {
+              id: Number(glaccount),
+            },
+          },
+          deskripsi,
+          jurnal_category: {
+            connect: {
+              id: Number(jurnal_category_id),
+            },
+          },
+          iscredit,
+          isdebit,
+          amount_credit,
+          amount_debit,
+          // proposal: {
+          //   connect: {
+          //     id: Number(transaction_proposal_id),
+          //   },
+          // },
+
+          // transaction_proposal_id,
+          transaction_petty_cast_id,
+          transaction_muzaki_id,
+          transaction_mustahiq_id,
+          transaction_program_id
+        },
+      });
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: glResult,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+
   async createJurnalPettyCash(req, res) {
     try {
       //const userId = req.user_id;

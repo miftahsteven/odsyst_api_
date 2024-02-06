@@ -200,6 +200,9 @@ module.exports = {
         gl_name: {
           contains: keyword,
         },
+        gl_group: {
+          contains: "PENERIMAAN"
+        }
       };
 
       const [count, gla] = await prisma.$transaction([
@@ -236,6 +239,146 @@ module.exports = {
         message: "Sukses Ambil Data",
 
         data: glResult,
+        pagination: {
+          total: count,
+          page,
+          hasNext: count > page * perPage,
+          totalPage: Math.ceil(count / perPage),
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+
+  async getDataProgram(req, res) {
+    try {
+      const page = Number(req.query.page || 1);
+      const perPage = Number(req.query.perPage || 10);
+      const status = Number(req.query.status || 4);
+      
+      const skip = (page - 1) * perPage;
+      const keyword = req.query.keyword || "";
+      const user_type = req.query.user_type || "";
+      const category = req.query.category || "";
+      const sortBy = req.query.sortBy || "program_id";
+      const sortType = req.query.order || "asc";
+
+      const params = {
+        program_title: {
+          contains: keyword,
+        },
+        program_status: 1
+       
+      };
+
+      const [count, prog] = await prisma.$transaction([
+        prisma.program.count({
+          where: params,
+        }),
+        prisma.program.findMany({          
+          select: {
+            program_id: true,
+            program_title: true
+          },
+          orderBy: {
+            [sortBy]: sortType,
+          },
+          where: params,
+          skip,
+          //take: perPage,
+        }),
+      ]);
+
+      const progResult = await Promise.all(
+        prog.map(async (item) => {
+
+
+          return {
+            ...item
+            //program_target_amount: Number(item.program_target_amount),
+            //total_donation: total_donation._sum.amount || 0,
+          };
+        })
+      );
+
+      res.status(200).json({
+        // aggregate,
+        message: "Sukses Ambil Data",
+
+        data: progResult,
+        pagination: {
+          total: count,
+          page,
+          hasNext: count > page * perPage,
+          totalPage: Math.ceil(count / perPage),
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+
+
+  async getAllMuzaki(req, res) {
+    try {
+      const page = Number(req.query.page || 1);
+      const perPage = Number(req.query.perPage || 10);
+      const status = Number(req.query.status || 4);
+      const skip = (page - 1) * perPage;
+      const keyword = req.query.keyword || "";
+      const user_type = req.query.user_type || "";
+      const category = req.query.category || "";
+      const sortBy = req.query.sortBy || "user_id";
+      const sortType = req.query.order || "asc";
+
+      const params = {
+        user_nama: {
+          contains: keyword,
+        },
+        user_type: 11,
+        user_status: 1
+      };
+
+      const [count, muzaki] = await prisma.$transaction([
+        prisma.user.count({
+          where: params,
+        }),
+        prisma.user.findMany({
+          select: {
+              user_id: true,
+              user_nama: true
+          },
+          orderBy: {
+            [sortBy]: sortType,
+          },
+          where: params,
+          skip,
+          take: perPage,
+        }),
+      ]);
+
+      const muzResult = await Promise.all(
+        muzaki.map(async (item) => {
+
+
+          return {
+            ...item
+            //program_target_amount: Number(item.program_target_amount),
+            //total_donation: total_donation._sum.amount || 0,
+          };
+        })
+      );
+
+      res.status(200).json({
+        // aggregate,
+        message: "Sukses Ambil Data",
+
+        data: muzResult,
         pagination: {
           total: count,
           page,

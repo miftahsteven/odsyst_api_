@@ -9,6 +9,8 @@ router.get("/provinces", refData.provinces);
 router.get("/cities/:id", refData.cities);
 router.get("/districts/:id", refData.districts);
 router.get("/gla", authentication, refData.glaccount);
+router.get("/all-program", authentication, refData.getDataProgram); //new for mt940 Header
+router.get("/all-muzaki", authentication, refData.getAllMuzaki); //new for mt940 Headerx`
 router.get("/glaccMt", authentication, refData.glaccountMt940); //new for mt940
 router.get("/gltype", authentication, refData.gltype);
 router.post("/addgl", authentication, refData.createGlAccount);
