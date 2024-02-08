@@ -29,4 +29,5 @@ router.put("/editArticle/:id",authentication, upload.single("banner"), refData.u
 router.delete("/delArticle/:id",authentication, refData.deleteArticle)
 
 router.get("/institusi/:id", refData.institusi)
+router.get("/glaccBayar", authentication, refData.glaccountPerBayar);
 module.exports = router;
