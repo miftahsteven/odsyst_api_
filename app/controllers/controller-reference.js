@@ -269,9 +269,7 @@ module.exports = {
         gl_name: {
           contains: keyword,
         },
-        gl_group: {
-          $or: ["PENERIMAAN", "PENYALURAN ZAKAT", "PENYALURAN AMIL"]
-        }
+        gl_group: { in: ["PENERIMAAN", "PENYALURAN AMIL", "PENYALURAN ZAKAT"] }
       };
 
       const [count, gla] = await prisma.$transaction([
@@ -327,7 +325,7 @@ module.exports = {
       const page = Number(req.query.page || 1);
       const perPage = Number(req.query.perPage || 10);
       const status = Number(req.query.status || 4);
-      
+
       const skip = (page - 1) * perPage;
       const keyword = req.query.keyword || "";
       const user_type = req.query.user_type || "";
@@ -340,14 +338,14 @@ module.exports = {
           contains: keyword,
         },
         program_status: 1
-       
+
       };
 
       const [count, prog] = await prisma.$transaction([
         prisma.program.count({
           where: params,
         }),
-        prisma.program.findMany({          
+        prisma.program.findMany({
           select: {
             program_id: true,
             program_title: true
@@ -419,8 +417,8 @@ module.exports = {
         }),
         prisma.user.findMany({
           select: {
-              user_id: true,
-              user_nama: true
+            user_id: true,
+            user_nama: true
           },
           orderBy: {
             [sortBy]: sortType,
@@ -830,9 +828,9 @@ module.exports = {
         });
       }
 
-      const array_of_allowed_files = ['png','jpg','jpeg'];
+      const array_of_allowed_files = ['png', 'jpg', 'jpeg'];
       const file_extension = file.originalname.slice(
-          ((file.originalname.lastIndexOf('.') - 1) >>> 0) + 2
+        ((file.originalname.lastIndexOf('.') - 1) >>> 0) + 2
       );
 
       // Check if the uploaded file is allowed
