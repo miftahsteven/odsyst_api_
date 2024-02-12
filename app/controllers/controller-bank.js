@@ -15,6 +15,13 @@ const readXlsxFile = require('read-excel-file/node')
 //     console.error(err);
 // });
 
+const gendate = () => {
+  const now = new Date();
+  const isoDate = now.toISOString();
+  return isoDate
+}
+
+
 
 module.exports ={
     // Get All Mustahiq Information
@@ -163,7 +170,8 @@ module.exports ={
       try {
         const userId = req.user_id;
         const { idmt } = req.body;
-  
+
+       
         if (!idmt) {
           return res.status(400).json({
             message: "Jurnal ID Kosong",
@@ -176,7 +184,8 @@ module.exports ={
           },
           data: {
             identified: 1,           
-            identified_user_id: userId
+            identified_user_id: userId,
+            identified_date: gendate()
           },
         });
   
@@ -203,10 +212,12 @@ module.exports ={
         const category = req.query.category || "";
         const sortBy = req.query.sortBy || "id";
         const sortType = req.query.order || "asc";
+        //const identified = Number(req.query.identified || 0);
   
         const params = {      
           AND: [
             {mt_file_id: Number(id)},
+            //{identified: Number(identified)},
             {
               text_info: {
                 contains: keyword,
@@ -401,6 +412,76 @@ module.exports ={
           message: "Sukses Ambil Data",
   
           data: mtResult,
+          pagination: {
+            total: count,
+            page,
+            hasNext: count > page * perPage,
+            totalPage: Math.ceil(count / perPage),
+          },
+        });
+      } catch (error) {
+        res.status(500).json({
+          message: error?.message,
+        });
+      }
+    },
+
+    async dataVerified(req, res) {
+      const id = req.params.id
+      try {
+        const page = Number(req.query.page || 1);
+        const perPage = Number(req.query.perPage || 10);
+        const status = Number(req.query.status || 4);
+        const identified = Number(req.query.identified || 1);
+        const skip = (page - 1) * perPage;
+        const keyword = req.query.keyword || "";
+        const user_type = req.query.user_type || "";
+        const category = req.query.category || "";
+        const sortBy = req.query.sortBy || "id";
+        const sortType = req.query.order || "asc";
+  
+        const params = {      
+          AND: [
+            {identified: Number(identified)},
+            {
+              text_info: {
+                contains: keyword,
+              },  
+            }
+          ]     
+        };
+  
+        const [count, bank] = await prisma.$transaction([
+          prisma.ebs_staging.count({
+            where: params,
+          }),
+          prisma.ebs_staging.findMany({              
+            orderBy: {
+              [sortBy]: sortType,
+            },
+            where: params,         
+            skip,
+            take: perPage,
+          }),
+        ]);
+  
+        const bankResult = await Promise.all(
+          bank.map(async (item) => {
+            
+  
+            return {
+              ...item
+              //program_target_amount: Number(item.program_target_amount),
+              //total_donation: total_donation._sum.amount || 0,
+            };
+          })
+        );
+  
+        res.status(200).json({
+          // aggregate,
+          message: "Sukses Ambil Data",
+  
+          data: bankResult,
           pagination: {
             total: count,
             page,
