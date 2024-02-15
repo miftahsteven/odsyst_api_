@@ -5,7 +5,6 @@ const { subMonths } = require('date-fns');
 const { some } = require("lodash");
 const { sendWhatsapp } = require("../helper/whatsapp");
 const phoneFormatter = require('phone-formatter');
-const { isValidNIK, getDataNIK } = require('nusantara-valid')
 const parsenik = require("parsenik");
 
 module.exports = {
@@ -114,6 +113,17 @@ module.exports = {
           },
         },
       });
+
+      const program = await prisma.program.findUnique({
+        where: {
+          program_id: Number(program_id),
+        },
+        select: {
+          program_title: true,
+        },
+      });
+
+      const program_title = program ? program.program_title : 'Program tidak terdaftar';
   
       if (existingProposal) {
         return res.status(400).json({
@@ -179,6 +189,22 @@ module.exports = {
           ...files,
         },
       });
+
+      if(ProposalResult) {
+
+        let pn = no_telp_pemberi_rekomendasi
+        pn = pn.replace(/\D/g, '');
+        if(pn.substring(0, 1) == '0'){        
+            pn = "62"+pn.substring(1).trim()
+        } else if(pn.substring(0,3) == '62') {
+            pn = "62"+pn.substring(3).trim()
+        }
+
+        const msgId = await sendWhatsapp({
+          wa_number: pn.replace(/[^0-9\.]+/g, ""),       
+          text: "Proposal Atas Nama "+nama+" dan NIK "+nik_mustahiq+" pada program "+program_title+" telah kami terima. Mohon lakukan konfirmasi kepada kami apabila terjadi duplikasi maupun kesalahan pada proposal. Terima kasih",
+        });
+    }
 
       return res.status(200).json({
         message: "Sukses",
