@@ -10,18 +10,14 @@ module.exports = {
       const keyword = req.query.keyword || "";
       const sortBy = req.query.sortBy || "id";
       const sortType = req.query.order || "asc";
+
+      const id = req.params.id;
   
       const params = {
-        OR: [
-          {
-            proposal: {
-              nama: {
-                contains: keyword,
-              },
-            },
-          },
-        ],
+        transaction_mustahiq_id: Number(id)
       };
+
+      console.log(params)
   
       const [count, gla] = await prisma.$transaction([
         prisma.jurnal.count({

@@ -5,6 +5,8 @@ const { subMonths } = require('date-fns');
 const { some } = require("lodash");
 const { sendWhatsapp } = require("../helper/whatsapp");
 const phoneFormatter = require('phone-formatter');
+const { isValidNIK, getDataNIK } = require('nusantara-valid')
+const parsenik = require("parsenik");
 
 module.exports = {
   async details(req, res) {
@@ -62,6 +64,9 @@ module.exports = {
       const dana_yang_diajukan = req.body.dana_yang_diajukan;
 
       //console.log(JSON.stringify(req.body))
+      const niks = Number(nik_mustahiq)
+      const validasi = parsenik.parse(niks)
+      console.log(validasi)
       if (!nik_mustahiq) {
         return res.status(400).json({ message: "NIK wajib diisi" });
       } else if (!nama) {
@@ -78,6 +83,8 @@ module.exports = {
         return res.status(400).json({ message: "Alamat Pemberi Rekomendasi wajib diisi" });
       } else if (!no_telp_pemberi_rekomendasi) {
         return res.status(400).json({ message: "Nomor Telepon Pemberi Rekomendasi wajib diisi" });
+      } else if (validasi.valid === false){
+        return res.status(400).json({ message: "NIK tidak valid" });
       }
 
       const files = {};
