@@ -99,11 +99,13 @@ model user {
   document_type         document_type[]
   ebs_validation        ebs_validation[]
   institusi             institusi[]
+  notification          notification[]
   pettycash             pettycash[]
   pettycash_request     pettycash_request[]
   proposal              proposal[]
   proposal_approval     proposal_approval[]
   recurring_transaction recurring_transaction[]
+  transactions          transactions[]
   mustahiq              mustahiq?               @relation(fields: [mustahiq_id], references: [id], onUpdate: NoAction)
   type                  UserType?               @relation(fields: [user_type], references: [user_type_id], onUpdate: NoAction)
 
@@ -121,10 +123,11 @@ model notification {
   user_id        Int
   program        program?      @relation(fields: [program_id], references: [program_id])
   transaction    transactions? @relation(fields: [transaction_id], references: [id])
+  user           user          @relation(fields: [user_id], references: [user_id], onDelete: Cascade, map: "notification_user_FK")
 
   @@index([program_id], map: "notification_program_id_fkey")
   @@index([transaction_id], map: "notification_transaction_id_fkey")
-  @@index([user_id], map: "notification_user_id_fkey")
+  @@index([user_id], map: "notification_user_FK")
 }
 
 model mustahiq {
@@ -205,6 +208,7 @@ model transactions {
   status         String         @default("pending") @db.VarChar(100)
   notification   notification[]
   program        program        @relation(fields: [program_id], references: [program_id])
+  user           user           @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "transactions_user_FK")
 
   @@index([program_id], map: "transactions_program_id_fkey")
   @@index([user_id], map: "transactions_user_FK")
@@ -219,28 +223,31 @@ model bank_account {
 }
 
 model ebs_staging {
-  id             Int              @id @default(autoincrement())
-  account_number String?          @db.VarChar(50)
-  trans_ref      String?          @db.VarChar(50)
-  bank_date      String?          @db.VarChar(100)
-  state_num      String?          @db.VarChar(25)
-  currency       String?          @db.VarChar(3)
-  ob_amount      String?          @db.VarChar(200)
-  ob_ind         String?          @db.VarChar(50)
-  eb_amount      String?          @db.VarChar(200)
-  eb_ind         String?          @db.VarChar(50)
-  trans_date     String?          @db.VarChar(100)
-  trans_type     String?          @db.VarChar(27)
-  trans_amount   String?          @db.VarChar(27)
-  trans_id       String?          @db.VarChar(27)
-  text_info      String?          @db.VarChar(200)
-  ebs_info1      String?          @db.VarChar(50)
-  ebs_info2      String?          @db.VarChar(50)
-  ebs_info3      String?          @db.VarChar(50)
-  ebs_filename   String?          @db.VarChar(255)
-  mt_file_id     Int?
-  mt_file        mt_file?         @relation(fields: [mt_file_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ebs_staging_FK")
-  ebs_validation ebs_validation[]
+  id                 Int              @id @default(autoincrement())
+  account_number     String?          @db.VarChar(50)
+  trans_ref          String?          @db.VarChar(50)
+  bank_date          String?          @db.VarChar(100)
+  state_num          String?          @db.VarChar(25)
+  currency           String?          @db.VarChar(3)
+  ob_amount          String?          @db.VarChar(200)
+  ob_ind             String?          @db.VarChar(50)
+  eb_amount          String?          @db.VarChar(200)
+  eb_ind             String?          @db.VarChar(50)
+  trans_date         String?          @db.VarChar(100)
+  trans_type         String?          @db.VarChar(27)
+  trans_amount       String?          @db.VarChar(27)
+  trans_id           String?          @db.VarChar(27)
+  text_info          String?          @db.VarChar(200)
+  ebs_info1          String?          @db.VarChar(50)
+  ebs_info2          String?          @db.VarChar(50)
+  ebs_info3          String?          @db.VarChar(50)
+  ebs_filename       String?          @db.VarChar(255)
+  mt_file_id         Int?
+  identified         Int?             @default(0) @db.SmallInt
+  identified_user_id Int?
+  identified_date    DateTime?        @db.DateTime(0)
+  mt_file            mt_file?         @relation(fields: [mt_file_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "ebs_staging_FK")
+  ebs_validation     ebs_validation[]
 
   @@index([account_number], map: "ebs_staging_account_number_fkey")
   @@index([mt_file_id], map: "ebs_staging_FK")
@@ -324,7 +331,7 @@ model gl_account {
   bank_account      Int?
   doc_number        Int?
   asnaf_type_id     Int?
-  parent_id         String?
+  parent_id         Int?                @default(0) @db.SmallInt
   ebs_validation    ebs_validation[]
   document_number   document_number?    @relation(fields: [doc_number], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "gl_account_FK_1")
   gl_account_type   gl_account_type?    @relation(fields: [gl_type], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "gl_account_type_FK")
@@ -476,6 +483,7 @@ model proposal {
   referentor                  String?              @db.VarChar(100)
   no_hp_referentor            String?              @db.VarChar(15)
   nama_akun                   String?              @db.VarChar(255)
+  approver_count              Int?                 @default(0) @db.SmallInt
   jurnal                      jurnal[]
   user                        user?                @relation(fields: [user_id], references: [user_id], onDelete: Restrict, onUpdate: Restrict, map: "proposal_FK")
   program                     program?             @relation(fields: [program_id], references: [program_id], onUpdate: SetNull, map: "proposal_FK_1")
@@ -544,6 +552,7 @@ model jurnal {
   transaction_petty_cash_id Int?
   transaction_muzaki_id     Int?
   transaction_mustahiq_id   Int?
+  transaction_program_id    Int?               @default(0)
   amount_credit             Int?
   amount_debit              Int?
   gl_account                gl_account?        @relation(fields: [glaccount], references: [id], onUpdate: SetNull, map: "jurnal_FK")
