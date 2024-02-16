@@ -82,7 +82,7 @@ module.exports = {
         return res.status(400).json({ message: "Alamat Pemberi Rekomendasi wajib diisi" });
       } else if (!no_telp_pemberi_rekomendasi) {
         return res.status(400).json({ message: "Nomor Telepon Pemberi Rekomendasi wajib diisi" });
-      } else if (validasi.valid === false){
+      } else if (validasi.valid === false) {
         return res.status(400).json({ message: "NIK tidak valid" });
       }
 
@@ -92,27 +92,9 @@ module.exports = {
         console.log(file)
         if (file) {
           console.log(file?.[0])
-          files[`lampiran${i}`] = "uploads/"+ file?.[0].filename;
+          files[`lampiran${i}`] = "uploads/" + file?.[0].filename;
         }
       }
-      const currentDate = new Date();
-      const formattedDate = currentDate.toISOString().slice(0, 10).replace(/-/g, '');
-      const empatnik = nik_mustahiq.slice(-4);
-      const no_proposal = formattedDate+empatnik;
-      const sixMonthsAgo = subMonths(new Date(), 6);
-      
-      const existingProposal = await prisma.proposal.findFirst({
-        where: {
-          program_id: Number(program_id),
-          nik_mustahiq,
-          create_date: {
-            gte: sixMonthsAgo,
-          },
-          approved: {
-            not: 2,
-          },
-        },
-      });
 
       const program = await prisma.program.findUnique({
         where: {
@@ -123,13 +105,39 @@ module.exports = {
         },
       });
 
-      const program_title = program ? program.program_title : 'Program tidak terdaftar';
-  
-      if (existingProposal) {
-        return res.status(400).json({
-          message: "Anda telah mengajukan proposal pada program berikut dalam kurun waktu 6 bulan",
+      const users = await prisma.institusi.findMany();
+      const institute = users.filter((data)=>data.institusi_user_id === userId)
+
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().slice(0, 10).replace(/-/g, '');
+      const empatnik = nik_mustahiq.slice(-4);
+      const no_proposal = formattedDate + empatnik;
+      const sixMonthsAgo = subMonths(new Date(), 6);
+
+      if (institute < 1) {
+        const existingProposal = await prisma.proposal.findFirst({
+          where: {
+            program_id: Number(program_id),
+            program: {
+              program_category_id: { in: [1, 2, 4] },
+            },
+            nik_mustahiq,
+            create_date: {
+              gte: sixMonthsAgo,
+            },
+            approved: {
+              not: 2,
+            },
+          },
         });
+        if (existingProposal) {
+          return res.status(400).json({
+            message: "Anda telah mengajukan proposal pada program berikut dalam kurun waktu 6 bulan",
+          });
+        }
       }
+
+      const program_title = program ? program.program_title : 'Program tidak terdaftar';
 
       const ProposalResult = await prisma.proposal.create({
         data: {
@@ -190,21 +198,21 @@ module.exports = {
         },
       });
 
-      if(ProposalResult) {
+      if (ProposalResult) {
 
         let pn = no_telp_pemberi_rekomendasi
         pn = pn.replace(/\D/g, '');
-        if(pn.substring(0, 1) == '0'){        
-            pn = "62"+pn.substring(1).trim()
-        } else if(pn.substring(0,3) == '62') {
-            pn = "62"+pn.substring(3).trim()
+        if (pn.substring(0, 1) == '0') {
+          pn = "62" + pn.substring(1).trim()
+        } else if (pn.substring(0, 3) == '62') {
+          pn = "62" + pn.substring(3).trim()
         }
 
         const msgId = await sendWhatsapp({
-          wa_number: pn.replace(/[^0-9\.]+/g, ""),       
-          text: "Proposal Atas Nama "+nama+" dan NIK "+nik_mustahiq+" pada program "+program_title+" telah kami terima. Mohon lakukan konfirmasi kepada kami apabila terjadi duplikasi maupun kesalahan pada proposal. Terima kasih",
+          wa_number: pn.replace(/[^0-9\.]+/g, ""),
+          text: "Proposal Atas Nama " + nama + " dan NIK " + nik_mustahiq + " pada program " + program_title + " telah kami terima. Mohon lakukan konfirmasi kepada kami apabila terjadi duplikasi maupun kesalahan pada proposal. Terima kasih",
         });
-    }
+      }
 
       return res.status(200).json({
         message: "Sukses",
@@ -240,21 +248,21 @@ module.exports = {
         });
       }
 
-      if(ispaid == 1) {
+      if (ispaid == 1) {
 
-          let pn = ref
-          if(pn.substring(0, 1) == '0'){        
-              pn = "62"+pn.substring(1).trim()
-          } else if(pn.substring(0,3) == '+62') {
-              pn = "62"+pn.substring(3).trim()
-          }
+        let pn = ref
+        if (pn.substring(0, 1) == '0') {
+          pn = "62" + pn.substring(1).trim()
+        } else if (pn.substring(0, 3) == '+62') {
+          pn = "62" + pn.substring(3).trim()
+        }
 
-          const msgId = await sendWhatsapp({
-            wa_number: pn.replace(/[^0-9\.]+/g, ""),       
-            text: "Proposal Atas Nama "+nama+", Telah disetujui dan telah ditransfer. Terima kasih",
-          });
+        const msgId = await sendWhatsapp({
+          wa_number: pn.replace(/[^0-9\.]+/g, ""),
+          text: "Proposal Atas Nama " + nama + ", Telah disetujui dan telah ditransfer. Terima kasih",
+        });
       }
-      
+
       return res.status(200).json({
         message: "Sukses",
         data: "Berhasil Ubah Data",
@@ -429,15 +437,15 @@ module.exports = {
         },
       });
 
-      if(status == 2){
-          const updateStatusAll = await prisma.proposal.update({
-            where: {
-              id: Number(proposal_id),
-            },
-            data:{ 
-              approved: 2
-            },
-          })
+      if (status == 2) {
+        const updateStatusAll = await prisma.proposal.update({
+          where: {
+            id: Number(proposal_id),
+          },
+          data: {
+            approved: 2
+          },
+        })
       }
 
       return res.status(200).json({
@@ -463,7 +471,7 @@ module.exports = {
       const category = req.query.category || "";
       const sortBy = req.query.sortBy || "create_date";
       const sortType = req.query.order || "desc";
-      
+
       // const params = {
       //   nama: {
       //     contains: keyword,
@@ -493,7 +501,7 @@ module.exports = {
         },
         status_bayar: 1,
         approved: 1,
-        ispaid:0
+        ispaid: 0
       };
 
       const params_paid = {
@@ -513,19 +521,19 @@ module.exports = {
         approved: 2
       };
       let whereclaus = "";
-      if(status === 0){
+      if (status === 0) {
         whereclaus = params
-      } else if(status === 1 ){
+      } else if (status === 1) {
         whereclaus = params
-      } else if(status === 2){
+      } else if (status === 2) {
         whereclaus = params_waitpayment
-      } else if(status === 3){
+      } else if (status === 3) {
         whereclaus = params_tolak
       } else if (status === 4) {
-         whereclaus = params_siapbayar
+        whereclaus = params_siapbayar
       } else if (status === 5) {
         whereclaus = params_paid
-     }
+      }
 
       const [count, proposals] = await prisma.$transaction([
         prisma.proposal.count({
@@ -540,16 +548,16 @@ module.exports = {
                 user_nama: true,
                 username: true,
                 user_phone: true,
-              },              
+              },
             },
             //program:true,
             program: {
-              select:{  
+              select: {
                 pogram_target_amount: false,
                 kategori_penyaluran: true
               },
               // include: {
-               
+
               // }
             },
             proposal_approval: {
@@ -580,7 +588,7 @@ module.exports = {
           //item.program_target_amount = undefined
           return {
             ...item,
-            pogram_target_amount: Number(item.program_target_amount),            
+            pogram_target_amount: Number(item.program_target_amount),
             //total_donation: total_donation._sum.amount || 0,
           };
         })
@@ -620,27 +628,27 @@ module.exports = {
       const sortType = req.query.order || "desc";
       let arrId = []
 
-      
-      cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa JOIN user u on pa.user_id = u.user_id where u.user_type in (14) and pa.proposal_id is not NULL GROUP BY pa.proposal_id` 
-       
+
+      cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa JOIN user u on pa.user_id = u.user_id where u.user_type in (14) and pa.proposal_id is not NULL GROUP BY pa.proposal_id`
+
       //const cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa JOIN user u on pa.user_id = u.user_id where u.user_type in (14) and pa.proposal_id is not NULL GROUP BY pa.proposal_id` 
-      
+
       cekdata.map(item => {
         arrId.push(item.id)
       })
 
       //console.log("LOG TYPESSXX", JSON.stringify(arrId));
-      
 
-      const params = {     
-        AND:[{   
-            nama: {  contains: keyword},
-            approved: 0,
-            status_bayar: 0,
-            id : {notIn :  arrId}
-          }]
+
+      const params = {
+        AND: [{
+          nama: { contains: keyword },
+          approved: 0,
+          status_bayar: 0,
+          id: { notIn: arrId }
+        }]
       };
-      
+
       const [count, proposals] = await prisma.$transaction([
         prisma.proposal.count({
           where: params,
@@ -654,16 +662,16 @@ module.exports = {
                 user_nama: true,
                 username: true,
                 user_phone: true,
-              },              
+              },
             },
             //program:true,
             program: {
-              select:{  
+              select: {
                 pogram_target_amount: false,
                 kategori_penyaluran: true
               },
               // include: {
-               
+
               // }
             },
             proposal_approval: {
@@ -688,7 +696,7 @@ module.exports = {
           take: perPage,
         }),
       ]);
-      
+
       // item.program_target_amount = undefined
       const propResult = await Promise.all(
         proposals.map(async (item) => {
@@ -700,7 +708,7 @@ module.exports = {
           };
         })
       );
-        
+
       res.status(200).json({
         // aggregate,
         message: "Sukses Ambil Data",
@@ -744,19 +752,19 @@ module.exports = {
       //const cekdata = await prisma.$queryRaw`select p.proposal_id as id, p.user_id  from proposal_approval p where p.proposal_id is not null having p.user_id != ${userId} order by p.proposal_id`
 
       //console.log("WABARR", JSON.stringify(cekdata));
-      cekdata.map(item => {        
-        arrId.push(item.id)       
+      cekdata.map(item => {
+        arrId.push(item.id)
       })
 
-      const params = {     
-        AND:[{   
-            nama: {  contains: keyword},
-            approved: 0,
-            status_bayar: 0,
-            id : {in :  arrId}
-          }]
+      const params = {
+        AND: [{
+          nama: { contains: keyword },
+          approved: 0,
+          status_bayar: 0,
+          id: { in: arrId }
+        }]
       };
-      
+
       const [count, proposals] = await prisma.$transaction([
         prisma.proposal.count({
           where: params,
@@ -770,16 +778,16 @@ module.exports = {
                 user_nama: true,
                 username: true,
                 user_phone: true,
-              },              
+              },
             },
             //program:true,
             program: {
-              select:{  
+              select: {
                 pogram_target_amount: false,
                 kategori_penyaluran: true
               },
               // include: {
-               
+
               // }
             },
             proposal_approval: {
@@ -804,7 +812,7 @@ module.exports = {
           take: perPage,
         }),
       ]);
-      
+
       // item.program_target_amount = undefined
       const propResult = await Promise.all(
         proposals.map(async (item) => {
@@ -816,7 +824,7 @@ module.exports = {
           };
         })
       );
-        
+
       res.status(200).json({
         // aggregate,
         message: "Sukses Ambil Data",
@@ -862,7 +870,7 @@ module.exports = {
       //   where: params,
       // });
 
-      const [count,summarize,proposals] = await prisma.$transaction([
+      const [count, summarize, proposals] = await prisma.$transaction([
         prisma.proposal.count({
           where: params,
         }),
@@ -882,18 +890,18 @@ module.exports = {
                 user_nama: true,
                 username: true,
                 user_phone: true,
-              },              
+              },
             },
             //program:true,
             program: {
-              select:{  
-                program_title:true,
+              select: {
+                program_title: true,
                 pogram_target_amount: false,
                 kategori_penyaluran: true,
                 program_category: true,
               },
               // include: {
-               
+
               // }
             },
             proposal_approval: {
@@ -925,11 +933,11 @@ module.exports = {
           //item.program_target_amount = undefined
           danaapp = danaapp + Number(item.dana_approval)
           return {
-            ...item,            
+            ...item,
             //pogram_target_amount: Number(item.program_target_amount),            
             //total_donation: total_donation._sum.amount || 0,
           };
-          
+
         })
       );
 
@@ -942,7 +950,7 @@ module.exports = {
         summarize: danaapp,
         data: propResult,
         pagination: {
-          total: count,          
+          total: count,
           page,
           hasNext: count > page * perPage,
           totalPage: Math.ceil(count / perPage),
@@ -971,7 +979,7 @@ module.exports = {
         nama: {
           contains: keyword,
         },
-        ispaid: 1,        
+        ispaid: 1,
         //approved: 1,
       };
 
@@ -980,7 +988,7 @@ module.exports = {
       //   where: params,
       // });
 
-      const [count,summarize,proposals] = await prisma.$transaction([
+      const [count, summarize, proposals] = await prisma.$transaction([
         prisma.proposal.count({
           where: params,
         }),
@@ -1000,18 +1008,18 @@ module.exports = {
                 user_nama: true,
                 username: true,
                 user_phone: true,
-              },              
+              },
             },
             //program:true,
             program: {
-              select:{  
-                program_title:true,
+              select: {
+                program_title: true,
                 pogram_target_amount: false,
                 kategori_penyaluran: true,
                 program_category: true,
               },
               // include: {
-               
+
               // }
             },
             proposal_approval: {
@@ -1043,11 +1051,11 @@ module.exports = {
           //item.program_target_amount = undefined
           //danaapp = danaapp + Number(item.dana_approval)
           return {
-            ...item,            
+            ...item,
             //pogram_target_amount: Number(item.program_target_amount),            
             //total_donation: total_donation._sum.amount || 0,
           };
-          
+
         })
       );
 
@@ -1060,7 +1068,7 @@ module.exports = {
         summarize: danaapp,
         data: propResult,
         pagination: {
-          total: count,          
+          total: count,
           page,
           hasNext: count > page * perPage,
           totalPage: Math.ceil(count / perPage),

@@ -278,6 +278,11 @@ module.exports = {
           // },
 
           // transaction_proposal_id,
+          proposal: {
+            connect: {
+              id: Number(transaction_proposal_id),
+            },
+          },
           transaction_petty_cast_id,
           transaction_muzaki_id,
           transaction_mustahiq_id,

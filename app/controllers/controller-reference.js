@@ -269,7 +269,7 @@ module.exports = {
         gl_name: {
           contains: keyword,
         },
-        gl_group: { in: ["PENERIMAAN", "PENYALURAN AMIL", "PENYALURAN ZAKAT"] }
+        gl_group: { notIn: ["PROG", "BANK", "KAS", "PIUTANG", "ASET", "BLANK"] }
       };
 
       const [count, gla] = await prisma.$transaction([
