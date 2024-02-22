@@ -259,7 +259,7 @@ module.exports = {
 
         const msgId = await sendWhatsapp({
           wa_number: pn.replace(/[^0-9\.]+/g, ""),
-          text: "Proposal Atas Nama " + nama + ", Telah disetujui dan telah ditransfer. Terima kasih",
+          text: "Proposal Atas Nama " + nama + ", Telah disetujui dan telah ditransfer sejumlah "+ proposal.dana_yang_disetujui +". Terima kasih",
         });
       }
 
