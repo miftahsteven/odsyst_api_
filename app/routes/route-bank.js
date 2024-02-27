@@ -4,7 +4,7 @@ const path = require("path");
 const multer  = require('multer')
 //const dest = path.resolve(__dirname, "../../uploads/");
 //const upload = multer({ dest: dest })
-const { upload } = require("../helper/upload");
+const { mtupload } = require("../helper/mtupload");
 const { authentication, authorization } = require("../../config/auth");
 const fs = require("fs/promises");
 
@@ -21,7 +21,7 @@ router.get('/list', authentication, bank.listbank);
 router.get('/listgla', authentication, bank.listGla);
 router.get('/listproposal', authentication, bank.listProposal);
 
-router.post("/upload", authentication, upload.single("statement"), bank.statementCreate);
+router.post("/upload", authentication, mtupload.single("statement"), bank.statementCreate);
 
 
 module.exports = router;

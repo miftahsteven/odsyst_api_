@@ -9,10 +9,11 @@ const mt940js = require('mt940js');
 const parser  = new mt940js.Parser();
 const fs = require('fs');
 const { z } = require("zod");
+const moment = require('moment')
 const readXlsxFile = require('read-excel-file/node')
 
 // pool.on('error',(err)=> {
-//     console.error(err);
+//     console.error(err); 
 // });
 
 const gendate = () => {
@@ -40,48 +41,68 @@ module.exports ={
 
         for (let s of statements) {
             //console.log(s.number.statement, s.statementDate, parseInt((s.accountIdentification).replace(/\s/g, '')), s.closingBalance);
+            const [duplicate] = await prisma.$transaction([
+              prisma.ebs_staging.findFirst({             
+                select: {
+                  id: true
+                },
+                where: {
+                  trans_date : new Date(moment(s.statementDate).format("YYYY-MM-DD")),
+                  ob_amount : {contains:  (s.openingBalance).toString()}
+                },                       
+              })
+            ])
+
+            if(duplicate === null) {
+
+                for (let t of s.transactions) {
+                //console.log(t.date, "DETAIL : ", t.amount, "Ref", t.details, "TYPE: ", t.transactionType, "FUNDSCODE: ", t.fundsCode);
+                            
+                dataTrans.push({
+                      account_number: (s.accountIdentification).replace(/\s/g, ''),
+                      trans_ref: s.transactionReference,
+                      bank_date: new Date(moment(s.statementDate).format("YYYY-MM-DD")),
+                      state_num: s.number.statement, 
+                      currency: s.currency,
+                      ob_amount: (s.openingBalance).toString(),
+                      ob_ind: Number(s.openingBalance) < 0 ? "D":"C",
+                      eb_amount: (s.closingBalance).toString(),
+                      eb_ind: Number(s.closingBalance) < 0 ? "D":"C",
+                      trans_date: new Date(moment(t.date).format("YYYY-MM-DD")),
+                      trans_type: t.transactionType,
+                      trans_amount: (t.amount).toString(),
+                      trans_id: Number(t.amount) < 0 ? "D":"C",
+                      text_info: (t.details).toString(),
+                      ebs_filename: filename,
+                      mt_file_id: Number(id),
+                      //isduplicate: duplicate??0
+                })
+
+                console.log(JSON.stringify(dataTrans))
+              
+              }
             
-            for (let t of s.transactions) {
-            //console.log(t.date, "DETAIL : ", t.amount, "Ref", t.details, "TYPE: ", t.transactionType, "FUNDSCODE: ", t.fundsCode);
-                 
-             
-
-            dataTrans.push({
-                  account_number: (s.accountIdentification).replace(/\s/g, ''),
-                  trans_ref: s.transactionReference,
-                  bank_date: (s.statementDate).toString(),
-                  state_num: s.number.statement, 
-                  currency: s.currency,
-                  ob_amount: (s.openingBalance).toString(),
-                  ob_ind: Number(s.openingBalance) < 0 ? "D":"C",
-                  eb_amount: (s.closingBalance).toString(),
-                  eb_ind: Number(s.closingBalance) < 0 ? "D":"C",
-                  trans_date: (t.date).toString(),
-                  trans_type: t.transactionType,
-                  trans_amount: (t.amount).toString(),
-                  trans_id: Number(t.amount) < 0 ? "D":"C",
-                  text_info: (t.details).toString(),
-                  ebs_filename: filename,
-                  mt_file_id: Number(id)
-            })
-
-            console.log(JSON.stringify(dataTrans))
-          
-          }
                         
             await prisma.ebs_staging.createMany({
                 data: dataTrans,
               });
         
-              res.status(200).json({
-                message: "Sukses Generate Data MT940",
-              });
-
-              // res.send({ 
-              //     success: true,
-              //     code: 200,  
-              //     message: "GET DATA SUCCESS",
+              // res.status(200).json({
+              //   message: "Sukses Generate Data MT940",
               // });
+
+              res.send({ 
+                  success: true,
+                  code: 200,  
+                  data: dataTrans,
+                  gen: duplicate,
+                  message: "GET DATA SUCCESS",
+              });
+            }else{
+              res.status(500).json({
+                message: "Ada Duplikasi File"
+              });
+            }
             // } catch (error) {
             //   return res.status(500).json({
             //     message: error?.message,
@@ -230,7 +251,15 @@ module.exports ={
           prisma.ebs_staging.count({
             where: params,
           }),
-          prisma.ebs_staging.findMany({              
+          prisma.ebs_staging.findMany({      
+            // select: {
+            //   //id: true,
+            //   //account_number: true,
+            //   //trans_date: true,
+            //   //bank_date: true,
+            //   //trans_amount: true,
+            //   //text_info: true
+            // },        
             orderBy: {
               [sortBy]: sortType,
             },
@@ -245,7 +274,8 @@ module.exports ={
             
   
             return {
-              ...item
+              ...item,
+              //bank_date: moment(item.bank_date).format("DD-MM-YYYY")
               //program_target_amount: Number(item.program_target_amount),
               //total_donation: total_donation._sum.amount || 0,
             };
@@ -582,6 +612,18 @@ module.exports ={
 
     async statementCreate(req, res) {
       try {        
+        const file = req.file;      
+
+        const [duplicateFile] = await prisma.$transaction([
+          prisma.mt_file.findFirst({             
+            select: {
+              id: true
+            },
+            where: {
+              filename : { contains : file.originalname }
+            },                       
+          })
+        ])
 
         const userId = req.user_id;
 
@@ -589,10 +631,16 @@ module.exports ={
           no_rekening: z.string({ required_error: "No Rekening Harus Diis" }).min(5),
           bank: z.number().optional()
         });
-        const file = req.file;      
+        
         if (!file) {
           return res.status(400).json({
             message: "File MT940 Tidak Boleh Kosong",
+          });
+        }
+        
+        if (duplicateFile !== null) {
+          return res.status(400).json({
+            message: "File MT940 Pernah Diupload Sebelumnya,",
           });
         }
 
@@ -642,7 +690,7 @@ module.exports ={
   
         return res.status(200).json({
           message: "Sukses",
-          data: glResult,
+          data: glResult          
         });
       } catch (error) {
             
