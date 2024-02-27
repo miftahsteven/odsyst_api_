@@ -1,7 +1,7 @@
 const { prisma } = require("../../prisma/client");
 const { Prisma } = require("@prisma/client");
 const fs = require("fs");
-const { subMonths } = require('date-fns');
+const { subMonths, subDays } = require('date-fns');
 const { some } = require("lodash");
 const { sendWhatsapp } = require("../helper/whatsapp");
 const phoneFormatter = require('phone-formatter');
@@ -113,6 +113,7 @@ module.exports = {
       const empatnik = nik_mustahiq.slice(-4);
       const no_proposal = formattedDate + empatnik;
       const sixMonthsAgo = subMonths(new Date(), 6);
+      const aDayAgo = subDays(new Date(), 1);
 
       if (institute < 1) {
         const existingProposal = await prisma.proposal.findFirst({
@@ -133,6 +134,27 @@ module.exports = {
         if (existingProposal) {
           return res.status(400).json({
             message: "Anda telah mengajukan proposal pada program berikut dalam kurun waktu 6 bulan",
+          });
+        }
+      } else {
+        const existingProposal = await prisma.proposal.findFirst({
+          where: {
+            program_id: Number(program_id),
+            program: {
+              program_category_id: { in: [1, 2, 4] },
+            },
+            nik_mustahiq,
+            create_date: {
+              gte: aDayAgo,
+            },
+            approved: {
+              not: 2,
+            },
+          },
+        });
+        if (existingProposal) {
+          return res.status(400).json({
+            message: "Anda telah mengajukan proposal pada program berikut dan baru dapat mengajukan kembali setelah 1 hari",
           });
         }
       }
@@ -240,7 +262,19 @@ module.exports = {
         data: {
           ispaid,
         },
+        include:{
+          user: {
+            select :{
+              mustahiq:true
+            }
+          }
+        }
       });
+
+      console.log(proposal)
+
+      const currentDate = new Date();
+      const formattedDate = currentDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
       if (!proposal) {
         return res.status(400).json({
@@ -257,9 +291,11 @@ module.exports = {
           pn = "62" + pn.substring(3).trim()
         }
 
+        const formattedDana = proposal.dana_yang_disetujui.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
+
         const msgId = await sendWhatsapp({
           wa_number: pn.replace(/[^0-9\.]+/g, ""),
-          text: "Proposal Atas Nama " + nama + ", Telah disetujui dan telah ditransfer sejumlah "+ proposal.dana_yang_disetujui +". Terima kasih",
+          text: `Proposal Atas Nama ${nama} telah disetujui dan telah ditransfer pada ${formattedDate} sejumlah ${formattedDana} ke nomor IMKas ${proposal.user.mustahiq.imkas_number} atau Rekening ${proposal.user.mustahiq.bank_number} a.n ${proposal.user.mustahiq.bank_account_name} anda. Terima kasih`,
         });
       }
 
