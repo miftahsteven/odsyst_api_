@@ -329,9 +329,12 @@ module.exports = {
             }
           });
     
-          await prisma.pettycash_request.delete({
+          await prisma.pettycash_request.update({
             where: {
               id: Number(id),
+            },
+            data:{
+              status: 2
             }        
           });
 
