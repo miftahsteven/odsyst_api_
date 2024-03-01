@@ -54,6 +54,7 @@ model program {
   program_category_id   Int?
   beneficiary_id        Int?
   kat_penyaluran_id     Int?
+  iswakaf               Int?                    @default(0) @db.SmallInt
   budget                budget[]
   notification          notification[]
   kategori_penyaluran   kategori_penyaluran?    @relation(fields: [kat_penyaluran_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "program_FK")

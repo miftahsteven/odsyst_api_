@@ -20,6 +20,7 @@ router.get('/allfile', authentication, bank.dataFileMt940);
 router.get('/list', authentication, bank.listbank);
 router.get('/listgla', authentication, bank.listGla);
 router.get('/listproposal', authentication, bank.listProposal);
+router.delete('/remove-file', authentication, bank.deleteMt940);
 
 router.post("/upload", authentication, mtupload.single("statement"), bank.statementCreate);
 
