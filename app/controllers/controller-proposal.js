@@ -106,7 +106,7 @@ module.exports = {
       });
 
       const users = await prisma.institusi.findMany();
-      const institute = users.filter((data)=>data.institusi_user_id === userId)
+      const institute = users.filter((data) => data.institusi_user_id === userId)
 
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().slice(0, 10).replace(/-/g, '');
@@ -262,10 +262,10 @@ module.exports = {
         data: {
           ispaid,
         },
-        include:{
+        include: {
           user: {
-            select :{
-              mustahiq:true
+            select: {
+              mustahiq: true
             }
           }
         }
@@ -384,6 +384,28 @@ module.exports = {
         });
       }
 
+      const existingProposal = await prisma.proposal.findUnique({
+        where: {
+          id: Number(id),
+        },
+        select: {
+          all_notes: true,
+        },
+      });
+
+      if (!existingProposal) {
+        return res.status(404).json({
+          message: "Proposal not found",
+        });
+      }
+
+      let updatedNotes = ""
+      if (existingProposal.all_notes === null) {
+        updatedNotes = all_notes
+      } else {
+        updatedNotes = `${existingProposal.all_notes}; ${all_notes}`;
+      }
+
       const ProposalResult = await prisma.proposal.update({
         where: {
           id: Number(id),
@@ -433,7 +455,8 @@ module.exports = {
           dana_yang_disetujui: dana_yang_disetujui ? Number(dana_yang_disetujui) : undefined,
           dana_approval: dana_approval ? Number(dana_approval) : undefined,
           approved: approved ? Number(approved) : undefined,
-          status_bayar
+          status_bayar,
+          all_notes: updatedNotes,
         },
       });
 
