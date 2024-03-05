@@ -469,7 +469,7 @@ model proposal {
   approved                    Int?                 @default(0) @db.SmallInt
   dana_approval               Int?
   kategori_penyaluran_id      Int?
-  fileupload                  String?              @db.Text
+  all_notes                   String?              @db.Text
   lampiran1                   String?              @db.Text
   lampiran2                   String?              @db.Text
   lampiran3                   String?              @db.Text

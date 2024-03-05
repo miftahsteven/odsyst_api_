@@ -362,7 +362,8 @@ module.exports = {
         dana_yang_disetujui,
         dana_approval,
         approved,
-        status_bayar
+        status_bayar,
+        all_notes
       } = req.body;
 
       //console.log(JSON.stringify(req.body))
