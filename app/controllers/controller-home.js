@@ -17,12 +17,14 @@ module.exports = {
       const category = req.query.category || "";
       const sortBy = req.query.sortBy || "program_id";
       const sortType = req.query.order || "asc";
+      const iswakaf = Number(req.query.iswakaf || 0);
 
       const params = {
         program_status: status,
         program_title: {
           contains: keyword,
         },
+        iswakaf: iswakaf,
         ...(category ? { program_category_id: Number(category) } : {}),
       };
 
@@ -303,6 +305,8 @@ module.exports = {
 
   async getBanner(req, res) {
     try {
+      const iswakaf = Number(req.query.iswakaf || 0);
+
       const banner = await prisma.program.findMany({
         orderBy: {
           program_id: "asc",
@@ -310,6 +314,7 @@ module.exports = {
         where: {
           program_status: 1,
           program_isheadline: 1,
+          iswakaf: iswakaf
         },
         include: {
           program_banner: {
