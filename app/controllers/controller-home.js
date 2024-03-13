@@ -17,7 +17,7 @@ module.exports = {
       const category = req.query.category || "";
       const sortBy = req.query.sortBy || "program_id";
       const sortType = req.query.order || "asc";
-      const iswakaf = Number(req.body.iswakaf || 0);
+      const iswakaf = Number(req.query.iswakaf || 0);
 
       const params = {
         program_status: status,

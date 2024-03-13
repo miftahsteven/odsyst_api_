@@ -429,7 +429,7 @@ module.exports = {
             });
           }
 
-          const array_of_allowed_files = ['png','jpg','jpeg'];
+          const array_of_allowed_files = ['png','jpg','jpeg','pdf'];
           const file_extension = file.originalname.slice(
               ((file.originalname.lastIndexOf('.') - 1) >>> 0) + 2
           );
