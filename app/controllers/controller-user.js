@@ -24,7 +24,7 @@ module.exports = {
        },
         where: {          
           username,
-          user_type: { in: [10,11] },          
+          user_type: { in: [10,11,15,16] },          
        },
       });
 
