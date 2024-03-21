@@ -8,6 +8,7 @@ const budget = require("./controller-budget");
 const refData = require("./controller-reference");
 const usererp = require("./controller-user-erp");
 const programerp = require("./controller-program-erp");
+const waqif = require("./controller-wakif");
 
 module.exports = {
   user,
@@ -19,5 +20,6 @@ module.exports = {
   proposal,
   jurnal,
   pettyCash,
-  budget
+  budget,
+  waqif
 };

@@ -30,6 +30,9 @@ const transactionRoute = require("./app/routes/transaction");
 const erpAuthRoute = require("./app/routes/route-erp-auth");
 const erpProgramRoute = require("./app/routes/route-erp-program");
 
+//wakaf
+const waqifRoute = require("./app/routes/route-waqif");
+
 console.log(path.join(__dirname, "uploads"));
 
 app.use("/public/uploads", express.static(path.join(__dirname, "uploads/")));
@@ -54,6 +57,9 @@ app.use("/transaction", transactionRoute);
 //ERP
 app.use("/erpauth", erpAuthRoute);
 app.use("/erpprogram", erpProgramRoute);
+
+//Wakaf
+app.use("/wakaf", waqifRoute);
 
 app.get("/", (req, res) => {
   res.send("Selamat Datang Di Portal ZISWAF Indosat");
