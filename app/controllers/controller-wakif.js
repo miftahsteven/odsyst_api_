@@ -74,6 +74,7 @@ module.exports = {
       const {
        waqif_id,
        waqif_reg_type,
+       waqif_reg_program_id,
        waqif_reg_nominal,
        waqif_reg_jangkawaktu,
        waqif_reg_isrecurring,
@@ -92,6 +93,11 @@ module.exports = {
               }
           },          
           waqif_reg_type : Number(waqif_reg_type),
+          program : {
+              connect : {
+                  program_id : Number(waqif_reg_program_id),
+              }
+          },         
           waqif_reg_nominal : Number(waqif_reg_nominal),
           waqif_reg_jangkawaktu : Number(waqif_reg_jangkawaktu),
           waqif_reg_isrecurring : Number(waqif_reg_isrecurring),
