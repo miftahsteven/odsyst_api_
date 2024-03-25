@@ -145,7 +145,7 @@ module.exports = {
           include: {
             user: true,
             provinces: true,
-            city: true
+            cities: true
           },
           skip,
           // take: perPage,
