@@ -171,5 +171,46 @@ module.exports = {
     }
   },
 
+  async createWakafTransactions(req, res) {
+    try {
+      const userId = req.user_id;
+
+      const {
+       waqif_reg_id,       
+       waqif_trans_nominal,
+       waqif_trans_status,
+       waqif_trans_va_tujuan,
+       waqif_trans_bank
+      } = req.body;
+
+      console.log(JSON.stringify(req.body))      
+
+      const transResult = await prisma.waqif_transaction.create({
+        data: {
+          waqif_register: {
+            connect: {
+              id: Number(waqif_reg_id),
+            },
+          },                    
+          waqif_trans_nominal,
+          waqif_trans_status,
+          waqif_trans_va_tujuan,
+          waqif_trans_bank
+        },
+      });
+
+      return res.status(200).json({
+        message: "Sukses Transaksi",
+        data: transResult,
+      });
+    } catch (error) {
+     
+      return res.status(500).json({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+
   
 };
