@@ -6,9 +6,9 @@ const { upload } = require("../helper/upload");
 
 router.post("/update-profile", authentication, waqif.create); 
 router.post("/register", authentication, waqif.createWakafReg); 
-router.get("/detail/:id", authentication, waqif.getWaqifById); 
+//router.get("/detail/:id", authentication, waqif.getWaqifById); 
 router.post("/transaction", authentication, waqif.createWakafTransactions); 
 router.get("/all", authentication, waqif.getAllDataWakaf); 
-router.get("/detail/:id", authentication, waqif.getDetailWakaf); 
+router.get("/detail/:id", authentication, waqif.detailWaqif); 
 
 module.exports = router;

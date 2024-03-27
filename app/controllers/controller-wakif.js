@@ -267,59 +267,44 @@ module.exports = {
     }
   },
 
-  async getDetailWakaf(req, res) {
+  async detailWaqif(req, res) {
     try {
-      const page = Number(req.query.page || 1);
-      const perPage = Number(req.query.perPage || 10);
-      const status = Number(req.query.status || 1);
-      const skip = (page - 1) * perPage;
-      const keyword = req.query.keyword || "";
-      const sortBy = req.query.sortBy || "id";
-      const sortType = req.query.order || "asc";
-      const id = req.params.id
-      const userId = req.user_id;
-      const params = {  id : Number(id) } ;
-      //const params = "";
+      const id = req.params.id;
 
-      const [count, detailwaqif] = await prisma.$transaction([
-        prisma.waqif_register.count({
-          where: params,
-        }),
-        prisma.waqif_register.findMany({
-          orderBy: {
-            [sortBy]: sortType,
-          },
-          where: params,
-          include: {
-            waqif: {
-                include: {
-                    user: true
-                }
-            },
-            waqif_transaction: true
-          },
-          skip,
-          // take: perPage,
-        }),
-      ]);
+      const waqifData = await prisma.waqif.findUnique({
+        where: {
+          id: Number(id),
+        },
+        include: {
+          waqif_register: {
+              include : {
+                  waqif_transaction: true
+              }
+          },          
+        },
+      });
 
-      res.status(200).json({
-        // aggregate,
-        message: "Sukses Ambil Data Detail Waqif",
+      if (!waqifData) {
+        return res.status(404).json({
+          message: "Wa tidak ditemukan",
+        });
+      }
 
-        data: detailwaqif,
-        // pagination: {
-        //   total: count,
-        //   page,
-        //   hasNext: count > page * perPage,
-        //   totalPage: Math.ceil(count / perPage),
-        // },
+      //const omit = require("lodash/omit");
+
+      //const cleanUser = omit(user, ["user_password", "user_token"]);
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: waqifData,
       });
     } catch (error) {
-      res.status(500).json({
+      return res.status(500).json({
         message: error?.message,
       });
     }
   },
+
+  
   
 };
