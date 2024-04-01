@@ -70,40 +70,60 @@ module.exports = {
 
   async createMitraReg(req, res) {
     try {
+
+    
+      const file = req.file;
+      
+      if (!file) {
+        return res.status(400).json({
+          message: "Proposal harus diupload",
+        });
+      }
+
+      const maxSize = 5000000;
+      if (file.size > maxSize) {
+        await fs.unlink(file.path);
+
+        return res.status(400).json({
+          message: "Ukuran Proposal Terlalu Besar",
+        });
+      }
+   
     
       const {
-       waqif_id,
-       waqif_reg_type,
-       waqif_reg_program_id,
-       waqif_reg_nominal,
-       waqif_reg_jangkawaktu,
-       waqif_reg_isrecurring,
-       waqif_reg_payment_method,
-       waqif_reg_doa,
-       waqif_reg_ishide
+       mitra_id,
+       mitra_reg_wakaf_category,
+       mitra_reg_referentor,
+       mitra_reg_nama_wakaf,
+       mitra_reg_alamat_wakaf,
+       mitra_reg_deskripsi_wakaf,
+       mitra_reg_nominal,
+       mitra_reg_durasi_value,  
+       mitra_reg_durasi_satuan       
       } = req.body;
 
       //console.log(JSON.stringify(req.body))      
 
-      const regResult = await prisma.waqif_register.create({
+      const regResult = await prisma.mitra_register.create({
         data: {
-          waqif : {
+          mitra : {
               connect : {
-                  id : Number(waqif_id),
+                  id : Number(mitra_id),
               }
           },          
-          waqif_reg_type : Number(waqif_reg_type),
-          program : {
+          mitra_reg_wakaf_category : Number(mitra_reg_wakaf_category),      
+          referentor : {
               connect : {
-                  program_id : Number(waqif_reg_program_id),
+                  id: Number(mitra_reg_referentor)
               }
-          },         
-          waqif_reg_nominal : Number(waqif_reg_nominal),
-          waqif_reg_jangkawaktu : Number(waqif_reg_jangkawaktu),
-          waqif_reg_isrecurring : Number(waqif_reg_isrecurring),
-          waqif_reg_payment_method,
-          waqif_reg_doa,
-          waqif_reg_ishide: Number(waqif_reg_ishide)
+          },
+          mitra_reg_nama_wakaf,
+          mitra_reg_alamat_wakaf,
+          mitra_reg_deskripsi_wakaf,    
+          mitra_reg_nominal : Number(mitra_reg_nominal),
+          mitra_reg_durasi_value : Number(mitra_reg_durasi_value),
+          mitra_reg_durasi_satuan : Number(mitra_reg_durasi_satuan),
+          mitra_reg_file: `uploads/${file.filename}`
         },
       });
 
