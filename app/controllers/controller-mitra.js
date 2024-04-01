@@ -17,8 +17,7 @@ module.exports = {
        mitra_npwp,
        mitra_siup_no,
        mitra_siup_date,
-       mitra_alamat,
-       //waqif_country,
+       mitra_alamat,       
        mitra_prov_id,
        mitra_city_id,
        mitra_kodepos     
@@ -33,14 +32,14 @@ module.exports = {
               user_id: Number(userId),
             },
           },
-          mitra_name,
+          mitra_nama,
           mitra_phone,
           mitra_email,
           mitra_nama_pendiri,
           mitra_nik,
           mitra_npwp,
           mitra_siup_no,
-          mitra_siup_date,
+          mitra_siup_date : moment().toISOString(mitra_siup_date),
           mitra_alamat,                            
           mitra_kodepos,
           provinces: {
@@ -58,7 +57,7 @@ module.exports = {
 
       return res.status(200).json({
         message: "Sukses",
-        data: waqifResult,
+        data: mitraResult,
       });
     } catch (error) {
      
@@ -69,7 +68,7 @@ module.exports = {
     }
   },
 
-  async createWakafReg(req, res) {
+  async createMitraReg(req, res) {
     try {
     
       const {
