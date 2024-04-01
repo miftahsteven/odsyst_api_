@@ -9,6 +9,7 @@ const refData = require("./controller-reference");
 const usererp = require("./controller-user-erp");
 const programerp = require("./controller-program-erp");
 const waqif = require("./controller-wakif");
+const mitra = require("./controller-mitra");
 
 module.exports = {
   user,
@@ -21,5 +22,6 @@ module.exports = {
   jurnal,
   pettyCash,
   budget,
-  waqif
+  waqif,
+  mitra
 };
