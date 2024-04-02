@@ -51,7 +51,9 @@ module.exports = {
               program_id: Number(programId),
             },
           },
-          
+          isrecurring,
+          recurring_value,
+          recurring_satuan
         },
       });
 
@@ -69,10 +71,7 @@ module.exports = {
             connect: {
               id: trx.id,
             },
-          },
-          isrecurring,
-          recurring_value,
-          recurring_satuan
+          }          
         },
       });
 
