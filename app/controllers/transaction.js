@@ -8,6 +8,9 @@ module.exports = {
       const payment_method = req.body.payment_method;
       const evidence = req.file;
       const amount = req.body.amount;
+      const isrecurring = req.body.isrecurring;
+      const recurring_value = req.body.recurring_value;
+      const recurring_satuan = req.body.recurring_satuan;
 
       if (!programId) {
         return res.status(400).json({
@@ -48,6 +51,7 @@ module.exports = {
               program_id: Number(programId),
             },
           },
+          
         },
       });
 
@@ -66,6 +70,9 @@ module.exports = {
               id: trx.id,
             },
           },
+          isrecurring,
+          recurring_value,
+          recurring_satuan
         },
       });
 
