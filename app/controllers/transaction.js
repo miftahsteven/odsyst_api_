@@ -9,7 +9,6 @@ module.exports = {
       const evidence = req.file;
       const amount = req.body.amount;
       const isrecurring = req.body.isrecurring;
-      const recurring_value = req.body.recurring_value;
       const recurring_satuan = req.body.recurring_satuan;
 
       if (!programId) {
@@ -51,9 +50,9 @@ module.exports = {
               program_id: Number(programId),
             },
           },
-          isrecurring,
-          recurring_value,
-          recurring_satuan
+          isrecurring: Number(isrecurring),
+          recurring_value: Number(amount),
+          recurring_satuan: Number(recurring_satuan)
         },
       });
 
@@ -88,6 +87,7 @@ module.exports = {
   async donate_nologin(req, res) {
     try {
       const userId = 1;
+      const is_nologin = 1;
       const programId = req.body.program_id;
       const payment_method = req.body.payment_method;
       const evidence = req.file;
@@ -130,7 +130,7 @@ module.exports = {
           payment_method,
           user: {
             connect: {
-              user_id: Number(userId),
+              user_id: 1,
             },
           },
           program: {
@@ -139,6 +139,7 @@ module.exports = {
             },
           },
           isrecurring,
+          is_nologin,
           recurring_value,
           recurring_satuan,
           nama_muzaki,
