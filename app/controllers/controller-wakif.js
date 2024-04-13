@@ -120,6 +120,138 @@ module.exports = {
     }
   },
 
+  async createWakafReg_Nologin(req, res) {
+    try {
+
+      const userId = 3;
+      const waqif_prov_id = 11;
+      const waqif_city_id = 156;
+    
+      const {
+       waqif_name,
+       waqif_whatsapp,
+       waqif_email,
+       waqif_reg_type,
+       waqif_reg_program_id,
+       waqif_reg_nominal,
+       waqif_reg_jangkawaktu,
+       waqif_reg_isrecurring,
+       waqif_reg_payment_method,
+       waqif_reg_doa,
+       waqif_reg_ishide
+      } = req.body;
+
+      //console.log(JSON.stringify(req.body))   
+      
+      const waqifResult = await prisma.waqif.create({
+        data: {
+          user: {
+            connect: {
+              user_id: Number(userId),
+            },
+          },
+          waqif_name,
+          waqif_whatsapp,
+          waqif_email,
+          //waqif_nik,
+          //waqif_gender,
+          //waqif_birthplace,
+          //waqif_birthdate: moment().toISOString(waqif_birthdate),
+          //waqif_iswna,
+          //waqif_country,
+          provinces: {
+              connect : {
+                prov_id : Number(waqif_prov_id),        
+              }
+          },
+          cities : {
+              connect : {
+                city_id : Number(waqif_city_id),
+              }
+          },
+          //waqif_agama,
+          //waqif_pekerjaan
+        },
+      });
+      
+      const wakif_id = Number(waqifResult.id);
+
+      const regResult = await prisma.waqif_register.create({
+        data: {
+          waqif : {
+              connect : {
+                  id : Number(wakif_id),
+              }
+          },          
+          waqif_reg_type : Number(waqif_reg_type),
+          program : {
+              connect : {
+                  program_id : Number(waqif_reg_program_id),
+              }
+          },         
+          waqif_reg_nominal : Number(waqif_reg_nominal),
+          waqif_reg_jangkawaktu : Number(waqif_reg_jangkawaktu),
+          waqif_reg_isrecurring : Number(waqif_reg_isrecurring),
+          waqif_reg_payment_method,
+          waqif_reg_doa,
+          waqif_reg_ishide: Number(waqif_reg_ishide)
+        },
+      });
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: regResult,
+      });
+    } catch (error) {
+     
+      return res.status(500).json({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+
+  async createWakafTransactions_Nologin(req, res) {
+    try {
+      const userId = req.user_id;
+
+      const {
+       waqif_reg_id,       
+       waqif_trans_nominal,
+       waqif_trans_status,
+       waqif_trans_va_tujuan,
+       waqif_trans_bank
+      } = req.body;
+
+      //console.log(JSON.stringify(req.body))      
+
+      const transResult = await prisma.waqif_transaction.create({
+        data: {
+          waqif_register: {
+            connect: {
+              id: Number(waqif_reg_id),
+            },
+          },                    
+          waqif_trans_nominal,
+          waqif_trans_status,
+          waqif_trans_va_tujuan,
+          waqif_trans_bank
+        },
+      });
+
+      return res.status(200).json({
+        message: "Sukses Transaksi",
+        data: transResult,
+      });
+    } catch (error) {
+     
+      return res.status(500).json({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+
 
   async getWaqifById(req, res) {
     try {
@@ -183,7 +315,7 @@ module.exports = {
        waqif_trans_bank
       } = req.body;
 
-      console.log(JSON.stringify(req.body))      
+      //console.log(JSON.stringify(req.body))      
 
       const transResult = await prisma.waqif_transaction.create({
         data: {
