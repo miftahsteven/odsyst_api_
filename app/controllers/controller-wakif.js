@@ -7,6 +7,8 @@ module.exports = {
   async create(req, res) {
     try {
       const userId = req.user_id;
+      const waqif_prov_id = 11;
+      const waqif_city_id = 156;
 
       const {
        waqif_name,
@@ -17,8 +19,8 @@ module.exports = {
        waqif_birthdate,
        waqif_iswna,
        //waqif_country,
-       waqif_prov_id,
-       waqif_city_id,
+      //  waqif_prov_id,
+      //  waqif_city_id,
        waqif_agama,
        waqif_pekerjaan
       } = req.body;

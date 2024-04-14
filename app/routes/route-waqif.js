@@ -11,6 +11,6 @@ router.post("/register-nologin", waqif.createWakafReg_Nologin);
 router.post("/transaction", authentication, waqif.createWakafTransactions); 
 router.post("/transaction-nologin", waqif.createWakafTransactions_Nologin); 
 router.get("/all", authentication, waqif.getAllDataWakaf); 
-router.get("/detail/:id", authentication, waqif.detailWaqif); 
+router.get("/detail/:id", waqif.detailWaqif); 
 
 module.exports = router;
