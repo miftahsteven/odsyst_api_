@@ -6,7 +6,8 @@ const { upload } = require("../helper/upload");
 
 router.post("/update-profile", authentication, mitra.create); 
 router.post("/register", authentication, upload.single("proposal") , mitra.createMitraReg); 
-// //router.get("/detail/:id", authentication, waqif.getWaqifById); 
+router.get("/detail/:id", authentication, mitra.getMitraById); 
+router.put("/tarik/:id", authentication, mitra.penarikanMitra); 
 // router.post("/transaction", authentication, waqif.createWakafTransactions); 
 // router.get("/all", authentication, waqif.getAllDataWakaf); 
 // router.get("/detail/:id", authentication, waqif.detailWaqif); 
