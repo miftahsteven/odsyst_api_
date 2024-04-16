@@ -13,4 +13,8 @@ router.post("/transaction-nologin", waqif.createWakafTransactions_Nologin);
 router.get("/all", authentication, waqif.getAllDataWakaf); 
 router.get("/detail/:id", waqif.detailWaqif); 
 
+
+//ERP Data
+router.get("/all-wakif", authentication, waqif.getAllWakif); 
+
 module.exports = router;
