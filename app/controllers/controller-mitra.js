@@ -191,6 +191,106 @@ module.exports = {
     }
   },
 
+  async getMitraById(req, res) {
+    try {
+      const page = Number(req.query.page || 1);
+      const perPage = Number(req.query.perPage || 10);
+      const status = Number(req.query.status || 1);
+      const skip = (page - 1) * perPage;
+      const keyword = req.query.keyword || "";
+      const sortBy = req.query.sortBy || "id";
+      const sortType = req.query.order || "asc";
+      const id = req.params.id
+      const params = { mitra_user_id: Number(id) };
+
+      const [count, detailmitra] = await prisma.$transaction([
+        prisma.mitra.count({
+          where: params,
+        }),
+        prisma.mitra.findMany({
+          orderBy: {
+            [sortBy]: sortType,
+          },
+          where: params,
+          include: {
+            user: true,
+            provinces: true,
+            cities: true,
+            mitra_register: {
+              include: {
+                program: {
+                  select: {
+                    program_title: true,
+                    program_banner: true,
+                    kategori_penyaluran: true
+                  },
+                }
+              }
+            },
+            mitra_penarikan_dana: true,
+          },
+          skip,
+          // take: perPage,
+        }),
+      ]);
+
+      res.status(200).json({
+        // aggregate,
+        message: "Sukses Ambil Data Detail Waqif",
+
+        data: detailmitra,
+        // pagination: {
+        //   total: count,
+        //   page,
+        //   hasNext: count > page * perPage,
+        //   totalPage: Math.ceil(count / perPage),
+        // },
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+
+  async penarikanMitra(req, res) {
+    try {
+      const {
+        status_request_penarikan,
+        mitra_bank,
+        mitra_no_rekening,
+        mitra_nama_rekening
+      } = req.body;
+
+      const id = req.params.id
+
+      //console.log(JSON.stringify(req.body))      
+
+      const mitraResult = await prisma.mitra.update({
+        where: {
+          id: Number(id)
+        },
+        data: {
+          status_request_penarikan,
+          mitra_bank,
+          mitra_no_rekening,
+          mitra_nama_rekening
+        },
+      });
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: mitraResult,
+      });
+    } catch (error) {
+
+      return res.status(500).json({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+
   async createWakafTransactions(req, res) {
     try {
       const userId = req.user_id;
