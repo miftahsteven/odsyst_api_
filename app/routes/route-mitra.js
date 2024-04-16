@@ -10,6 +10,12 @@ router.get("/detail/:id", authentication, mitra.getMitraById);
 router.put("/tarik/:id", authentication, mitra.penarikanMitra); 
 // router.post("/transaction", authentication, waqif.createWakafTransactions); 
 // router.get("/all", authentication, waqif.getAllDataWakaf); 
-// router.get("/detail/:id", authentication, waqif.detailWaqif); 
+// router.get("/detail/:id", authentication, waqif.detailWaqif);
+
+
+//start here for ERP
+router.get("/all-process", authentication, mitra.getAllProcessMitraProposal);
+router.post("/approved", authentication, mitra.approvalProposal);
+router.get("/all-approver", authentication, mitra.getAllApproverMitraProposal);
 
 module.exports = router;
