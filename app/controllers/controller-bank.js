@@ -53,7 +53,7 @@ module.exports = {
       if (duplicate === null) {
 
         for (let t of s.transactions) {
-          //console.log(t.date, "DETAIL : ", t.amount, "Ref", t.details, "TYPE: ", t.transactionType, "FUNDSCODE: ", t.fundsCode);
+          console.log(t.date, "DETAIL : ", t.amount, "Ref", t.details, "TYPE: ", t.transactionType, "FUNDSCODE: ", t.fundsCode);
 
           dataTrans.push({
             account_number: (s.accountIdentification).replace(/\s/g, ''),
@@ -79,9 +79,9 @@ module.exports = {
 
         }
 
-        await prisma.ebs_staging.createMany({
-          data: dataTrans,
-        });
+        // await prisma.ebs_staging.createMany({
+        //   data: dataTrans,
+        // });
 
         // res.status(200).json({
         //   message: "Sukses Generate Data MT940",

@@ -55,7 +55,9 @@ model program {
   beneficiary_id        Int?
   kat_penyaluran_id     Int?
   iswakaf               Int?                    @default(0) @db.SmallInt
+  program_wakaf_type    Int?                    @default(0)
   budget                budget[]
+  mitra_register        mitra_register[]
   notification          notification[]
   kategori_penyaluran   kategori_penyaluran?    @relation(fields: [kat_penyaluran_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "program_FK")
   beneficiary           beneficiary?            @relation(fields: [beneficiary_id], references: [id])
@@ -65,6 +67,7 @@ model program {
   proposal              proposal[]
   recurring_transaction recurring_transaction[]
   transactions          transactions[]
+  waqif_register        waqif_register[]
 
   @@index([program_institusi_id], map: "program_program_institusi_id_fkey")
   @@index([beneficiary_id], map: "program_beneficiary_id_fkey")
@@ -100,6 +103,8 @@ model user {
   document_type         document_type[]
   ebs_validation        ebs_validation[]
   institusi             institusi[]
+  mitra                 mitra[]
+  mitra_approval        mitra_approval[]
   notification          notification[]
   pettycash             pettycash[]
   pettycash_request     pettycash_request[]
@@ -109,6 +114,7 @@ model user {
   transactions          transactions[]
   mustahiq              mustahiq?               @relation(fields: [mustahiq_id], references: [id], onUpdate: NoAction)
   type                  UserType?               @relation(fields: [user_type], references: [user_type_id], onUpdate: NoAction)
+  waqif                 waqif[]
 
   @@index([user_type], map: "user_user_type_fkey")
 }
@@ -200,16 +206,24 @@ model test_table {
 }
 
 model transactions {
-  id             Int            @id @default(autoincrement())
-  program_id     Int
-  user_id        Int
-  amount         Int            @db.MediumInt
-  payment_method String         @db.VarChar(100)
-  evidence       String         @db.Text
-  status         String         @default("pending") @db.VarChar(100)
-  notification   notification[]
-  program        program        @relation(fields: [program_id], references: [program_id])
-  user           user           @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "transactions_user_FK")
+  id               Int            @id @default(autoincrement())
+  program_id       Int
+  user_id          Int
+  amount           Int            @db.MediumInt
+  payment_method   String         @db.VarChar(100)
+  evidence         String         @db.Text
+  status           String         @default("pending") @db.VarChar(100)
+  isrecurring      Int?           @default(0) @db.SmallInt
+  recurring_value  Int?
+  recurring_satuan Int?
+  is_nologin       Int?           @default(0) @db.SmallInt
+  nama_muzaki      String?        @db.VarChar(255)
+  email_muzaki     String?        @db.VarChar(255)
+  phone_muzaki     String?        @db.VarChar(16)
+  trans_date       DateTime?      @default(now()) @db.Timestamp(0)
+  notification     notification[]
+  program          program        @relation(fields: [program_id], references: [program_id])
+  user             user           @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "transactions_user_FK")
 
   @@index([program_id], map: "transactions_program_id_fkey")
   @@index([user_id], map: "transactions_user_FK")
@@ -384,6 +398,8 @@ model provinces {
   status          Int?     @default(1)
   province_by_dpt Int?     @default(0)
   cities          cities[]
+  mitra           mitra[]
+  waqif           waqif[]
 }
 
 model cities {
@@ -392,6 +408,8 @@ model cities {
   prov_id   Int?
   provinces provinces?  @relation(fields: [prov_id], references: [prov_id], onDelete: NoAction, onUpdate: NoAction, map: "cities_FK")
   districts districts[]
+  mitra     mitra[]
+  waqif     waqif[]
 
   @@index([prov_id], map: "cities_FK")
 }
@@ -736,4 +754,207 @@ model imkas_payment_statement {
   mt_file     mt_file  @relation(fields: [file_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "imkas_payment_statement_mt_file_FK")
 
   @@index([file_id], map: "imkas_payment_statement_mt_file_FK")
+}
+
+model countries {
+  id      Int    @id
+  alpha_2 String @default("") @db.Char(2)
+  alpha_3 String @default("") @db.Char(3)
+  ar      String @default("") @db.VarChar(75)
+  bg      String @default("") @db.VarChar(75)
+  cs      String @default("") @db.VarChar(75)
+  da      String @default("") @db.VarChar(75)
+  de      String @default("") @db.VarChar(75)
+  el      String @default("") @db.VarChar(75)
+  en      String @default("") @db.VarChar(75)
+  eo      String @default("") @db.VarChar(75)
+  es      String @default("") @db.VarChar(75)
+  et      String @default("") @db.VarChar(75)
+  eu      String @default("") @db.VarChar(75)
+  fa      String @default("") @db.VarChar(75)
+  fi      String @default("") @db.VarChar(75)
+  fr      String @default("") @db.VarChar(75)
+  hr      String @default("") @db.VarChar(75)
+  hu      String @default("") @db.VarChar(75)
+  hy      String @default("") @db.VarChar(75)
+  it      String @default("") @db.VarChar(75)
+  ja      String @default("") @db.VarChar(75)
+  ko      String @default("") @db.VarChar(75)
+  lt      String @default("") @db.VarChar(75)
+  nl      String @default("") @db.VarChar(75)
+  no      String @default("") @db.VarChar(75)
+  pl      String @default("") @db.VarChar(75)
+  pt      String @default("") @db.VarChar(75)
+  ro      String @default("") @db.VarChar(75)
+  ru      String @default("") @db.VarChar(75)
+  sk      String @default("") @db.VarChar(75)
+  sl      String @default("") @db.VarChar(75)
+  sr      String @default("") @db.VarChar(75)
+  sv      String @default("") @db.VarChar(75)
+  th      String @default("") @db.VarChar(75)
+  uk      String @default("") @db.VarChar(75)
+  zh      String @default("") @db.VarChar(75)
+  zh_tw   String @default("") @map("zh-tw") @db.VarChar(75)
+}
+
+model wakaf_type {
+  wt_id   Int     @id @default(autoincrement())
+  wt_name String? @db.VarChar(100)
+}
+
+model waqif {
+  id               Int              @id @default(autoincrement())
+  user_id          Int?
+  waqif_name       String?          @db.VarChar(255)
+  waqif_whatsapp   String?          @db.VarChar(15)
+  waqif_email      String?          @db.VarChar(255)
+  waqif_nik        String?          @db.VarChar(16)
+  waqif_gender     Int?             @default(0) @db.SmallInt
+  waqif_birthplace String?          @db.VarChar(100)
+  waqif_birthdate  DateTime?        @db.Date
+  waqif_iswna      Int?             @default(0) @db.SmallInt
+  waqif_country    Int?             @default(0)
+  waqif_prov_id    Int?
+  waqif_city_id    Int?
+  waqif_agama      Int?             @default(0)
+  waqif_pekerjaan  String?          @db.VarChar(255)
+  waqif_regdate    DateTime?        @default(now()) @db.Timestamp(0)
+  cities           cities?          @relation(fields: [waqif_city_id], references: [city_id], onDelete: NoAction, onUpdate: NoAction, map: "waqif_cities_FK")
+  provinces        provinces?       @relation(fields: [waqif_prov_id], references: [prov_id], onDelete: NoAction, onUpdate: NoAction, map: "waqif_provinces_FK")
+  user             user?            @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "waqif_user_FK")
+  waqif_register   waqif_register[]
+
+  @@index([waqif_city_id], map: "waqif_cities_FK")
+  @@index([waqif_prov_id], map: "waqif_provinces_FK")
+  @@index([user_id], map: "waqif_user_FK")
+}
+
+model waqif_register {
+  id                       Int                 @id @default(autoincrement())
+  waqif_id                 Int?
+  waqif_reg_type           Int
+  waqif_reg_program_id     Int?
+  waqif_reg_nominal        Int?                @default(0)
+  waqif_reg_jangkawaktu    Int?
+  waqif_reg_isrecurring    Int?                @default(0) @db.SmallInt
+  waqif_reg_payment_method Int?
+  waqif_reg_doa            String?             @db.Text
+  waqif_reg_ishide         Int?                @default(0) @db.SmallInt
+  waqif_reg_regdate        DateTime?           @default(now()) @db.Timestamp(0)
+  program                  program?            @relation(fields: [waqif_reg_program_id], references: [program_id], onDelete: NoAction, onUpdate: NoAction, map: "waqif_register_program_FK")
+  waqif                    waqif?              @relation(fields: [waqif_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "waqif_register_waqif_FK")
+  waqif_transaction        waqif_transaction[]
+
+  @@index([waqif_id], map: "waqif_register_waqif_FK")
+  @@index([waqif_reg_program_id], map: "waqif_register_program_FK")
+}
+
+model waqif_transaction {
+  id                    Int             @id @default(autoincrement())
+  waqif_reg_id          Int?
+  waqif_trans_datetime  DateTime?       @default(now()) @db.Timestamp(0)
+  waqif_trans_nominal   Int?
+  waqif_trans_status    Int?            @default(0) @db.SmallInt
+  waqif_trans_va_tujuan String?         @db.VarChar(100)
+  waqif_trans_bank      Int?
+  waqif_register        waqif_register? @relation(fields: [waqif_reg_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "waqif_transaction_waqif_register_FK")
+
+  @@index([waqif_reg_id], map: "waqif_transaction_waqif_register_FK")
+}
+
+model bank {
+  id        Int     @id @default(autoincrement())
+  bank_name String? @db.VarChar(100)
+}
+
+model mitra {
+  id                       Int                    @id @default(autoincrement())
+  mitra_nama               String?                @db.VarChar(255)
+  mitra_phone              String?                @db.VarChar(16)
+  mitra_email              String?                @db.VarChar(255)
+  mitra_nama_pendiri       String?                @db.VarChar(255)
+  mitra_nik                String?                @db.VarChar(16)
+  mitra_npwp               String?                @db.VarChar(25)
+  mitra_siup_no            String?                @db.VarChar(100)
+  mitra_siup_date          DateTime?              @db.Date
+  mitra_alamat             String?                @db.Text
+  mitra_city_id            Int?
+  mitra_prov_id            Int?
+  mitra_kodepos            String?                @db.VarChar(10)
+  mitra_user_id            Int?
+  approved                 Int?                   @default(0) @db.SmallInt
+  dana_approval            Int?                   @default(0)
+  status_bayar             Int?                   @default(0)
+  dana_final_disetujui     Int?
+  status_request_penarikan Int?                   @default(0) @db.SmallInt
+  mitra_bank               String?                @db.VarChar(15)
+  mitra_no_rekening        String?                @db.VarChar(16)
+  mitra_nama_rekening      String?                @db.VarChar(100)
+  cities                   cities?                @relation(fields: [mitra_city_id], references: [city_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_cities_FK")
+  provinces                provinces?             @relation(fields: [mitra_prov_id], references: [prov_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_provinces_FK")
+  user                     user?                  @relation(fields: [mitra_user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_user_FK")
+  mitra_approval           mitra_approval[]
+  mitra_penarikan_dana     mitra_penarikan_dana[]
+  mitra_register           mitra_register[]
+
+  @@index([mitra_city_id], map: "mitra_cities_FK")
+  @@index([mitra_prov_id], map: "mitra_provinces_FK")
+  @@index([mitra_user_id], map: "mitra_user_FK")
+}
+
+model mitra_register {
+  id                        Int         @id @default(autoincrement())
+  mitra_id                  Int?
+  mitra_reg_wakaf_category  Int?
+  mitra_reg_referentor      Int?
+  mitra_reg_nama_wakaf      String?     @db.VarChar(255)
+  mitra_reg_alamat_wakaf    String?     @db.Text
+  mitra_reg_deskripsi_wakaf String?     @db.Text
+  mitra_reg_nominal         Int?
+  mitra_reg_durasi_value    Int?
+  mitra_reg_durasi_satuan   Int?        @db.SmallInt
+  mitra_reg_file            String?     @db.Text
+  mitra_reg_program_id      Int?
+  mitra                     mitra?      @relation(fields: [mitra_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_register_mitra_FK")
+  program                   program?    @relation(fields: [mitra_reg_program_id], references: [program_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_register_program_FK")
+  referentor                referentor? @relation(fields: [mitra_reg_referentor], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_register_referentor_FK")
+
+  @@index([mitra_reg_referentor], map: "mitra_register_referentor_FK")
+  @@index([mitra_id], map: "mitra_register_mitra_FK")
+  @@index([mitra_reg_program_id], map: "mitra_register_program_FK")
+}
+
+model referentor {
+  id                   Int              @id @default(autoincrement())
+  referentor_nama      String?          @db.VarChar(255)
+  referentor_phone     String?          @db.VarChar(16)
+  referentor_email     String?          @db.VarChar(100)
+  referentor_isindosat Int?             @default(0) @db.SmallInt
+  mitra_register       mitra_register[]
+}
+
+model mitra_approval {
+  id       Int       @id @default(autoincrement())
+  mitra_id Int?
+  user_id  Int?
+  date     DateTime? @default(now()) @db.Timestamp(0)
+  status   Int?      @default(0) @db.SmallInt
+  flag     Int?      @default(0) @db.SmallInt
+  amount   Int?      @default(0)
+  mitra    mitra?    @relation(fields: [mitra_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_approval_mitra_FK")
+  user     user?     @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_approval_user_FK")
+
+  @@index([mitra_id], map: "mitra_approval_mitra_FK")
+  @@index([user_id], map: "mitra_approval_user_FK")
+}
+
+model mitra_penarikan_dana {
+  id           Int       @id @default(autoincrement())
+  mitra_id     Int?
+  nominal      Int?
+  penarikan_ke Int?      @default(1) @db.SmallInt
+  datetime     DateTime? @default(now()) @db.Timestamp(0)
+  mitra        mitra?    @relation(fields: [mitra_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_penarikan_dana_mitra_FK")
+
+  @@index([mitra_id], map: "mitra_penarikan_dana_mitra_FK")
 }
