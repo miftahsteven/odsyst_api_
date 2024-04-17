@@ -717,6 +717,7 @@ module.exports = {
         AND: [{
           mitra_nama: { contains: keyword },
           approved: 0,
+          mitra_statys: 1,
           status_bayar: 0,
           id: { in: arrId }
         }]
@@ -813,6 +814,38 @@ module.exports = {
       });
     } catch (error) {
       res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+
+
+  async updateStatusMitra(req, res) {
+    try {
+      const id = req.params.id;
+      const { mitra_status } = req.body;
+
+      // if (!waqif_status) {
+      //   return res.status(400).json({
+      //     message: "Status Kosong ",
+      //   });
+      // }
+
+      await prisma.mitra.update({
+        where: {
+          id: Number(id),
+        },
+        data: {
+          mitra_status: Number(mitra_status)
+        },
+      });
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: "Berhasil Update Data",
+      });
+    } catch (error) {
+      return res.status(500).json({
         message: error?.message,
       });
     }
