@@ -16,5 +16,6 @@ router.get("/detail/:id", waqif.detailWaqif);
 
 //ERP Data
 router.get("/all-wakif", authentication, waqif.getAllWakif); 
+router.put("/update/:id", authentication, waqif.updateWakif);
 
 module.exports = router;

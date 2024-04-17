@@ -466,6 +466,13 @@ module.exports = {
           // include: {
           //   type: true,
           // },
+          include: {
+              waqif_register: {
+                select : {
+                  waqif_reg_nominal: true
+                }
+              }
+          },
           orderBy: {
             [sortBy]: sortType,
           },
@@ -499,6 +506,37 @@ module.exports = {
       });
     } catch (error) {
       res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+
+  async updateWakif(req, res) {
+    try {
+      const id = req.params.id;
+      const { waqif_status } = req.body;
+
+      // if (!waqif_status) {
+      //   return res.status(400).json({
+      //     message: "Status Kosong ",
+      //   });
+      // }
+
+      await prisma.waqif.update({
+        where: {
+          id: Number(id),
+        },
+        data: {
+          waqif_status: Number(waqif_status)
+        },
+      });
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: "Berhasil Update Data",
+      });
+    } catch (error) {
+      return res.status(500).json({
         message: error?.message,
       });
     }
