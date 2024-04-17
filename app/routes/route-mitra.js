@@ -17,5 +17,6 @@ router.put("/tarik/:id", authentication, mitra.penarikanMitra);
 router.get("/all-process", authentication, mitra.getAllProcessMitraProposal);
 router.post("/approved", authentication, mitra.approvalProposal);
 router.get("/all-approver", authentication, mitra.getAllApproverMitraProposal);
+router.put("/update/:id", authentication, mitra.updateStatusMitra);
 
 module.exports = router;
