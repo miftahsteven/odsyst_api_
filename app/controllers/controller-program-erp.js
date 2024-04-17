@@ -273,6 +273,7 @@ module.exports = {
           required_error: "Target Dana Harus Diisi",
           invalid_type_error: "Target Dana Harus Diisi",
         }),
+        iswakaf: z.number()
       });
 
       const program_institusi_id = 1;
@@ -287,6 +288,7 @@ module.exports = {
         program_start_date: new Date(req.body.program_start_date),
         program_target_amount: Number(req.body.program_target_amount),
         program_institusi_id: program_institusi_id,
+        iswakaf: Number(req.body.iswakaf)
       });
 
       const program_cat_id = Number(req.body.program_category_id);
@@ -397,6 +399,7 @@ module.exports = {
         }),
         program_banner: z
           .any().optional(),
+        iswakaf: z.number()
       });
 
       // BODY
@@ -409,6 +412,7 @@ module.exports = {
         program_start_date: new Date(req.body.program_start_date),
         program_target_amount: Number(req.body.program_target_amount),
         program_institusi_id: req.body.program_institusi_id ? parseInt(req.body.program_institusi_id) : undefined,
+        iswakaf: Number(req.body.iswakaf)
       });
 
       const program_cat_id = Number(req.body.program_category_id);
