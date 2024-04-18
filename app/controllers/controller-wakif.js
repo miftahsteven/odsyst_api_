@@ -1,6 +1,6 @@
 const { prisma } = require("../../prisma/client");
 const fs = require("fs");
-const  moment  = require("moment")
+const moment = require("moment")
 
 module.exports = {
 
@@ -11,21 +11,21 @@ module.exports = {
       const waqif_city_id = 156;
 
       const {
-       waqif_name,
-       waqif_whatsapp,
-       waqif_nik,
-       waqif_gender,
-       waqif_birthplace,
-       waqif_birthdate,
-       waqif_iswna,
-       //waqif_country,
-      //  waqif_prov_id,
-      //  waqif_city_id,
-       waqif_agama,
-       waqif_pekerjaan
+        waqif_name,
+        waqif_whatsapp,
+        waqif_nik,
+        waqif_gender,
+        waqif_birthplace,
+        waqif_birthdate,
+        waqif_iswna,
+        //waqif_country,
+        //  waqif_prov_id,
+        //  waqif_city_id,
+        waqif_agama,
+        waqif_pekerjaan
       } = req.body;
 
-      console.log(JSON.stringify(req.body))      
+      console.log(JSON.stringify(req.body))
 
       const waqifResult = await prisma.waqif.create({
         data: {
@@ -43,14 +43,14 @@ module.exports = {
           waqif_iswna,
           //waqif_country,
           provinces: {
-              connect : {
-                prov_id : Number(waqif_prov_id),        
-              }
+            connect: {
+              prov_id: Number(waqif_prov_id),
+            }
           },
-          cities : {
-              connect : {
-                city_id : Number(waqif_city_id),
-              }
+          cities: {
+            connect: {
+              city_id: Number(waqif_city_id),
+            }
           },
           waqif_agama,
           waqif_pekerjaan
@@ -62,7 +62,7 @@ module.exports = {
         data: waqifResult,
       });
     } catch (error) {
-     
+
       return res.status(500).json({
         message: "Internal Server Error",
         error: error.message,
@@ -72,41 +72,78 @@ module.exports = {
 
   async createWakafReg(req, res) {
     try {
-    
+
       const {
-       waqif_id,
-       waqif_reg_type,
-       waqif_reg_program_id,
-       waqif_reg_nominal,
-       waqif_reg_jangkawaktu,
-       waqif_reg_isrecurring,
-       waqif_reg_payment_method,
-       waqif_reg_doa,
-       waqif_reg_ishide
+        waqif_id,
+        waqif_reg_type,
+        waqif_reg_program_id,
+        waqif_reg_nominal,
+        waqif_reg_jangkawaktu,
+        waqif_reg_isrecurring,
+        waqif_reg_payment_method,
+        waqif_reg_doa,
+        waqif_reg_ishide
       } = req.body;
 
       //console.log(JSON.stringify(req.body))      
+      let file = req.file;
+
+      if (waqif_reg_type = 4) {
+        if (!file) {
+          return res.status(400).json({
+            message: "Asuransi harus diupload",
+          });
+        }
+        const maxSize = 5000000;
+        if (file.size > maxSize) {
+          await fs.unlink(file.path);
+
+          return res.status(400).json({
+            message: "Ukuran File Terlalu Besar",
+          });
+        }
+      }
+
+
+      const regData = {
+        waqif: {
+          connect: {
+            id: Number(wakif_id),
+          },
+        },
+        waqif_reg_type: Number(waqif_reg_type),
+        program: {
+          connect: {
+            program_id: Number(waqif_reg_program_id),
+          },
+        },
+        waqif_reg_nominal: Number(waqif_reg_nominal),
+        waqif_reg_jangkawaktu: Number(waqif_reg_jangkawaktu),
+        waqif_reg_isrecurring: Number(waqif_reg_isrecurring),
+        waqif_reg_payment_method: Number(waqif_reg_payment_method),
+        waqif_reg_doa,
+        waqif_reg_ishide: Number(waqif_reg_ishide)
+      };
+      
+      if (waqif_reg_type == 4) {
+        if (!file) {
+          return res.status(400).json({
+            message: "Asuransi harus diupload",
+          });
+        }
+        const maxSize = 5000000;
+        if (file.size > maxSize) {
+          await fs.unlink(file.path);
+          return res.status(400).json({
+            message: "Ukuran File Terlalu Besar",
+          });
+        }
+        console.log(file);
+        regData.waqif_reg_file_asuransi = `uploads/${file.filename}`;
+      }
 
       const regResult = await prisma.waqif_register.create({
-        data: {
-          waqif : {
-              connect : {
-                  id : Number(waqif_id),
-              }
-          },          
-          waqif_reg_type : Number(waqif_reg_type),
-          program : {
-              connect : {
-                  program_id : Number(waqif_reg_program_id),
-              }
-          },         
-          waqif_reg_nominal : Number(waqif_reg_nominal),
-          waqif_reg_jangkawaktu : Number(waqif_reg_jangkawaktu),
-          waqif_reg_isrecurring : Number(waqif_reg_isrecurring),
-          waqif_reg_payment_method,
-          waqif_reg_doa,
-          waqif_reg_ishide: Number(waqif_reg_ishide)
-        },
+        data: regData,
       });
 
       return res.status(200).json({
@@ -114,7 +151,7 @@ module.exports = {
         data: regResult,
       });
     } catch (error) {
-     
+
       return res.status(500).json({
         message: "Internal Server Error",
         error: error.message,
@@ -125,26 +162,28 @@ module.exports = {
   async createWakafReg_Nologin(req, res) {
     try {
 
+      const file = req.file;
+
       const userId = 3;
       const waqif_prov_id = 11;
       const waqif_city_id = 156;
-    
+
       const {
-       waqif_name,
-       waqif_whatsapp,
-       waqif_email,
-       waqif_reg_type,
-       waqif_reg_program_id,
-       waqif_reg_nominal,
-       waqif_reg_jangkawaktu,
-       waqif_reg_isrecurring,
-       waqif_reg_payment_method,
-       waqif_reg_doa,
-       waqif_reg_ishide
+        waqif_name,
+        waqif_whatsapp,
+        waqif_email,
+        waqif_reg_type,
+        waqif_reg_program_id,
+        waqif_reg_nominal,
+        waqif_reg_jangkawaktu,
+        waqif_reg_isrecurring,
+        waqif_reg_payment_method,
+        waqif_reg_doa,
+        waqif_reg_ishide
       } = req.body;
 
       //console.log(JSON.stringify(req.body))   
-      
+
       const waqifResult = await prisma.waqif.create({
         data: {
           user: {
@@ -162,42 +201,77 @@ module.exports = {
           //waqif_iswna,
           //waqif_country,
           provinces: {
-              connect : {
-                prov_id : Number(waqif_prov_id),        
-              }
+            connect: {
+              prov_id: Number(waqif_prov_id),
+            }
           },
-          cities : {
-              connect : {
-                city_id : Number(waqif_city_id),
-              }
+          cities: {
+            connect: {
+              city_id: Number(waqif_city_id),
+            }
           },
           //waqif_agama,
           //waqif_pekerjaan
         },
       });
-      
+
       const wakif_id = Number(waqifResult.id);
 
-      const regResult = await prisma.waqif_register.create({
-        data: {
-          waqif : {
-              connect : {
-                  id : Number(wakif_id),
-              }
-          },          
-          waqif_reg_type : Number(waqif_reg_type),
-          program : {
-              connect : {
-                  program_id : Number(waqif_reg_program_id),
-              }
-          },         
-          waqif_reg_nominal : Number(waqif_reg_nominal),
-          waqif_reg_jangkawaktu : Number(waqif_reg_jangkawaktu),
-          waqif_reg_isrecurring : Number(waqif_reg_isrecurring),
-          waqif_reg_payment_method,
-          waqif_reg_doa,
-          waqif_reg_ishide: Number(waqif_reg_ishide)
+      // if (waqif_reg_type == 4) {
+      //   if (!file) {
+      //     return res.status(400).json({
+      //       message: "Asuransi harus diupload",
+      //     });
+      //   }
+      //   const maxSize = 5000000;
+      //   if (file.size > maxSize) {
+      //     await fs.unlink(file.path);
+
+      //     return res.status(400).json({
+      //       message: "Ukuran File Terlalu Besar",
+      //     });
+      //   }
+      // }
+
+      const regData = {
+        waqif: {
+          connect: {
+            id: Number(wakif_id),
+          },
         },
+        waqif_reg_type: Number(waqif_reg_type),
+        program: {
+          connect: {
+            program_id: Number(waqif_reg_program_id),
+          },
+        },
+        waqif_reg_nominal: Number(waqif_reg_nominal),
+        waqif_reg_jangkawaktu: Number(waqif_reg_jangkawaktu),
+        waqif_reg_isrecurring: Number(waqif_reg_isrecurring),
+        waqif_reg_payment_method: Number(waqif_reg_payment_method),
+        waqif_reg_doa,
+        waqif_reg_ishide: Number(waqif_reg_ishide)
+      };
+      
+      if (waqif_reg_type == 4) {
+        if (!file) {
+          return res.status(400).json({
+            message: "Asuransi harus diupload",
+          });
+        }
+        const maxSize = 5000000;
+        if (file.size > maxSize) {
+          await fs.unlink(file.path);
+          return res.status(400).json({
+            message: "Ukuran File Terlalu Besar",
+          });
+        }
+        console.log(file);
+        regData.waqif_reg_file_asuransi = `uploads/${file.filename}`;
+      }
+
+      const regResult = await prisma.waqif_register.create({
+        data: regData,
       });
 
       return res.status(200).json({
@@ -205,7 +279,7 @@ module.exports = {
         data: regResult,
       });
     } catch (error) {
-     
+
       return res.status(500).json({
         message: "Internal Server Error",
         error: error.message,
@@ -218,11 +292,11 @@ module.exports = {
       const userId = req.user_id;
 
       const {
-       waqif_reg_id,       
-       waqif_trans_nominal,
-       waqif_trans_status,
-       waqif_trans_va_tujuan,
-       waqif_trans_bank
+        waqif_reg_id,
+        waqif_trans_nominal,
+        waqif_trans_status,
+        waqif_trans_va_tujuan,
+        waqif_trans_bank
       } = req.body;
 
       //console.log(JSON.stringify(req.body))      
@@ -233,7 +307,7 @@ module.exports = {
             connect: {
               id: Number(waqif_reg_id),
             },
-          },                    
+          },
           waqif_trans_nominal,
           waqif_trans_status,
           waqif_trans_va_tujuan,
@@ -246,7 +320,7 @@ module.exports = {
         data: transResult,
       });
     } catch (error) {
-     
+
       return res.status(500).json({
         message: "Internal Server Error",
         error: error.message,
@@ -265,7 +339,7 @@ module.exports = {
       const sortBy = req.query.sortBy || "id";
       const sortType = req.query.order || "asc";
       const id = req.params.id
-      const params = { user_id: Number(id)};
+      const params = { user_id: Number(id) };
 
       const [count, detailwaqif] = await prisma.$transaction([
         prisma.waqif.count({
@@ -310,11 +384,11 @@ module.exports = {
       const userId = req.user_id;
 
       const {
-       waqif_reg_id,       
-       waqif_trans_nominal,
-       waqif_trans_status,
-       waqif_trans_va_tujuan,
-       waqif_trans_bank
+        waqif_reg_id,
+        waqif_trans_nominal,
+        waqif_trans_status,
+        waqif_trans_va_tujuan,
+        waqif_trans_bank
       } = req.body;
 
       //console.log(JSON.stringify(req.body))      
@@ -325,7 +399,7 @@ module.exports = {
             connect: {
               id: Number(waqif_reg_id),
             },
-          },                    
+          },
           waqif_trans_nominal,
           waqif_trans_status,
           waqif_trans_va_tujuan,
@@ -338,7 +412,7 @@ module.exports = {
         data: transResult,
       });
     } catch (error) {
-     
+
       return res.status(500).json({
         message: "Internal Server Error",
         error: error.message,
@@ -357,7 +431,7 @@ module.exports = {
       const sortType = req.query.order || "asc";
       const id = req.params.id
       const userId = req.user_id;
-      const params = {  waqif : { user_id: Number(userId) }} ;
+      const params = { waqif: { user_id: Number(userId) } };
       //const params = "";
 
       const [count, detailwaqif] = await prisma.$transaction([
@@ -371,9 +445,9 @@ module.exports = {
           where: params,
           include: {
             waqif: {
-                include: {
-                    user: true
-                }
+              include: {
+                user: true
+              }
             },
             waqif_transaction: true
           },
@@ -411,10 +485,10 @@ module.exports = {
         },
         include: {
           waqif_register: {
-              include : {
-                  waqif_transaction: true
-              }
-          },          
+            include: {
+              waqif_transaction: true
+            }
+          },
         },
       });
 
@@ -445,7 +519,7 @@ module.exports = {
       const perPage = Number(req.query.perPage || 10);
       const status = Number(req.query.status || 1);
       const skip = (page - 1) * perPage;
-      const keyword = req.query.keyword || "";      
+      const keyword = req.query.keyword || "";
       const category = req.query.category || "";
       const sortBy = req.query.sortBy || "id";
       const sortType = req.query.order || "desc";
@@ -462,25 +536,22 @@ module.exports = {
         prisma.waqif.count({
           where: params,
         }),
-        prisma.waqif.findMany({
-          // include: {
-          //   type: true,
-          // },
+        prisma.waqif.findMany({          
           include: {
-              waqif_register: {
-                select : {
-                  waqif_reg_nominal: true,
-                  waqif_reg_payment_method: true,
-                  program: {
-                    select: {
-                      program_title: true,
-                      pogram_target_amount: false,
-                      kategori_penyaluran: false,
-                      program_category: false,
-                    },
-                  }
+            waqif_register: {
+              select : {
+                waqif_reg_nominal: true,
+                waqif_reg_payment_method: true,
+                program: {
+                  select: {
+                    program_title: true,
+                    pogram_target_amount: false,
+                    kategori_penyaluran: false,
+                    program_category: false,
+                  },
                 }
               }
+            }
           },
           orderBy: {
             [sortBy]: sortType,
@@ -550,6 +621,6 @@ module.exports = {
       });
     }
   },
-  
-  
+
+
 };
