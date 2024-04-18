@@ -637,6 +637,140 @@ module.exports = {
     }
   },
 
+  async getAllProcessMitraProposalRecap(req, res) {
+    try {
+      const userId = Number(req.user.user_id || 0)
+      const userType = Number(req.user.user_type || 0)
+      const page = Number(req.query.page || 1);
+      const perPage = Number(req.query.perPage || 10);
+      const status = Number(req.query.status || 0);
+      const skip = (page - 1) * perPage;
+      const keyword = req.query.nama || "";
+      const user_type = req.query.user_type || "";
+      const category = req.query.category || "";
+      const sortBy = req.query.sortBy || "created_date";
+      const sortType = req.query.order || "desc";
+      let arrId = []
+
+
+      //cekdata = await prisma.$queryRaw`select pa.mitra_id as id from mitra_approval pa JOIN user u on pa.user_id = u.user_id where u.user_type in (14) and pa.mitra_id is not NULL GROUP BY pa.mitra_id`
+      cekdata = await prisma.$queryRaw`select pa.mitra_id as id from mitra_approval pa JOIN user u on pa.user_id = u.user_id where pa.mitra_id is not NULL GROUP BY pa.mitra_id`
+      //const cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa JOIN user u on pa.user_id = u.user_id where u.user_type in (14) and pa.proposal_id is not NULL GROUP BY pa.proposal_id` 
+
+      cekdata.map(item => {
+        arrId.push(item.id)
+      })
+
+      //console.log("LOG TYPESSXX", JSON.stringify(arrId));
+
+
+      const params = {
+        AND: [{
+          mitra_nama: { contains: keyword },
+          approved: 0,
+          status_bayar: 0,
+          id: { notIn: arrId }
+        }]
+      };
+
+      const [count, proposals] = await prisma.$transaction([
+        prisma.mitra.count({
+          where: params,
+        }),
+        prisma.mitra.findMany({
+          include: {
+            user: {
+              select: {
+                //mustahiq: true,
+                user_id: true,
+                user_nama: true,
+                username: true,
+                user_phone: true,
+              },
+            },
+            cities: true,
+            provinces: true,
+            //program:true,
+            // program: {
+            //   select: {
+            //     pogram_target_amount: false,
+            //     kategori_penyaluran: true
+            //   },
+            //   // include: {
+
+            //   // }
+            // },
+            mitra_register:{
+              include: {
+                // mitra_reg_nominal: true,
+                // mitra_reg_nama_wakaf: true,
+                // mitra_reg_file: true,
+                //mitra_reg_date_start: true,
+                //mitra_reg_date_end: true,
+                referentor: true,
+                program : {
+                    select: {
+                        pogram_target_amount: false,
+                        kategori_penyaluran: false,
+                        program_title: true
+                    }
+                }
+              }
+            },
+            mitra_approval: {
+              include: {
+                user: {
+                  select: {
+                    user_id: true,
+                    user_nama: true,
+                    username: true,
+                    user_phone: true,
+                    user_type: true
+                  },
+                },
+              },
+            },
+          },
+          orderBy: {
+            [sortBy]: sortType,
+          },
+          where: params,
+          skip,
+          take: perPage,
+        }),
+      ]);
+
+      // item.program_target_amount = undefined
+      const propResult = await Promise.all(
+        proposals.map(async (item) => {
+          //item.program_target_amount = undefined
+          return {
+            ...item,
+            //pogram_target_amount: Number(item.program_target_amount),            
+            //total_donation: total_donation._sum.amount || 0,
+          };
+        })
+      );
+
+      res.status(200).json({
+        // aggregate,
+        message: "Sukses Ambil Data Mitra",
+
+        data: propResult,
+        pagination: {
+          total: count,
+          page,
+          hasNext: count > page * perPage,
+          totalPage: Math.ceil(count / perPage),
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+
   async approvalProposal(req, res) {
     try {
       const userId = req.user_id;
@@ -717,7 +851,7 @@ module.exports = {
         AND: [{
           mitra_nama: { contains: keyword },
           approved: 0,
-          mitra_statys: 1,
+          mitra_status: 1,
           status_bayar: 0,
           id: { in: arrId }
         }]
@@ -755,6 +889,8 @@ module.exports = {
                 // mitra_reg_nominal: true,
                 // mitra_reg_nama_wakaf: true,
                 // mitra_reg_file: true,
+                //mitra_reg_date_start: true,
+                //mitra_reg_date_end: true,
                 referentor: true,
                 program : {
                     select: {
