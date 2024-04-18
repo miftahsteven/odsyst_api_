@@ -1,6 +1,8 @@
 const { prisma } = require("../../prisma/client");
 const fs = require("fs");
-const  moment  = require("moment")
+const { connect } = require("http2");
+const moment = require("moment")
+const { sendWhatsapp } = require("../helper/whatsapp");
 
 module.exports = {
 
@@ -9,18 +11,20 @@ module.exports = {
       const userId = req.user_id;
 
       const {
-       mitra_nama,
-       mitra_phone,
-       mitra_email,
-       mitra_nama_pendiri,
-       mitra_nik,
-       mitra_npwp,
-       mitra_siup_no,
-       mitra_siup_date,
-       mitra_alamat,       
-       mitra_prov_id,
-       mitra_city_id,
-       mitra_kodepos     
+        mitra_nama,
+        mitra_phone,
+        mitra_email,
+        mitra_nama_pendiri,
+        mitra_nik,
+        mitra_npwp,
+        mitra_siup_no,
+        mitra_siup_date,
+        mitra_alamat,
+        mitra_prov_id,
+        mitra_city_id,
+        mitra_kodepos,
+        mitra_badan_usaha_category,
+        mitra_reg_program_id
       } = req.body;
 
       //console.log(JSON.stringify(req.body))      
@@ -35,23 +39,29 @@ module.exports = {
           mitra_nama,
           mitra_phone,
           mitra_email,
+          program: {
+            connect:{
+              program_id: Number(mitra_reg_program_id)
+            }
+          },
           mitra_nama_pendiri,
           mitra_nik,
           mitra_npwp,
           mitra_siup_no,
-          mitra_siup_date : moment().toISOString(mitra_siup_date),
-          mitra_alamat,                            
+          mitra_siup_date: moment().toISOString(mitra_siup_date),
+          mitra_alamat,
           mitra_kodepos,
+          mitra_badan_usaha_category: Number(mitra_badan_usaha_category),
           provinces: {
-              connect : {
-                prov_id : Number(mitra_prov_id),        
-              }
+            connect: {
+              prov_id: Number(mitra_prov_id),
+            }
           },
-          cities : {
-              connect : {
-                city_id : Number(mitra_city_id),
-              }
-          }          
+          cities: {
+            connect: {
+              city_id: Number(mitra_city_id),
+            }
+          }
         },
       });
 
@@ -60,7 +70,7 @@ module.exports = {
         data: mitraResult,
       });
     } catch (error) {
-     
+
       return res.status(500).json({
         message: "Internal Server Error",
         error: error.message,
@@ -71,9 +81,9 @@ module.exports = {
   async createMitraReg(req, res) {
     try {
 
-    
+
       const file = req.file;
-      
+
       if (!file) {
         return res.status(400).json({
           message: "Proposal harus diupload",
@@ -88,41 +98,51 @@ module.exports = {
           message: "Ukuran Proposal Terlalu Besar",
         });
       }
-   
-    
+
+
       const {
-       mitra_id,
-       mitra_reg_wakaf_category,
-       mitra_reg_referentor,
-       mitra_reg_nama_wakaf,
-       mitra_reg_alamat_wakaf,
-       mitra_reg_deskripsi_wakaf,
-       mitra_reg_nominal,
-       mitra_reg_durasi_value,  
-       mitra_reg_durasi_satuan       
+        mitra_id,
+        mitra_reg_wakaf_category,
+        mitra_reg_referentor,
+        mitra_reg_nama_wakaf,
+        mitra_reg_alamat_wakaf,
+        mitra_reg_deskripsi_wakaf,
+        mitra_reg_nominal,
+        mitra_reg_durasi_value,
+        mitra_reg_program_id,
+        mitra_reg_durasi_satuan,
+        mitra_reg_date_start,
+        mitra_reg_date_end
       } = req.body;
 
       //console.log(JSON.stringify(req.body))      
 
       const regResult = await prisma.mitra_register.create({
         data: {
-          mitra : {
-              connect : {
-                  id : Number(mitra_id),
-              }
-          },          
-          mitra_reg_wakaf_category : Number(mitra_reg_wakaf_category),      
-          referentor : {
-              connect : {
-                  id: Number(mitra_reg_referentor)
-              }
+          mitra: {
+            connect: {
+              id: Number(mitra_id),
+            }
+          },
+          mitra_reg_wakaf_category: Number(mitra_reg_wakaf_category),
+          referentor: {
+            connect: {
+              id: Number(mitra_reg_referentor)
+            }
+          },
+          program: {
+            connect:{
+              program_id: Number(mitra_reg_program_id)
+            }
           },
           mitra_reg_nama_wakaf,
           mitra_reg_alamat_wakaf,
-          mitra_reg_deskripsi_wakaf,    
-          mitra_reg_nominal : Number(mitra_reg_nominal),
-          mitra_reg_durasi_value : Number(mitra_reg_durasi_value),
-          mitra_reg_durasi_satuan : Number(mitra_reg_durasi_satuan),
+          mitra_reg_deskripsi_wakaf,
+          mitra_reg_date_start: moment().toISOString(mitra_reg_date_start),
+          mitra_reg_date_end : moment().toISOString(mitra_reg_date_end),  
+          mitra_reg_nominal: Number(mitra_reg_nominal),
+          mitra_reg_durasi_value: Number(mitra_reg_durasi_value),
+          mitra_reg_durasi_satuan: Number(mitra_reg_durasi_satuan),
           mitra_reg_file: `uploads/${file.filename}`
         },
       });
@@ -132,7 +152,7 @@ module.exports = {
         data: regResult,
       });
     } catch (error) {
-     
+
       return res.status(500).json({
         message: "Internal Server Error",
         error: error.message,
@@ -151,7 +171,7 @@ module.exports = {
       const sortBy = req.query.sortBy || "id";
       const sortType = req.query.order || "asc";
       const id = req.params.id
-      const params = { user_id: Number(id)};
+      const params = { user_id: Number(id) };
 
       const [count, detailwaqif] = await prisma.$transaction([
         prisma.waqif.count({
@@ -296,14 +316,14 @@ module.exports = {
       const userId = req.user_id;
 
       const {
-       waqif_reg_id,       
-       waqif_trans_nominal,
-       waqif_trans_status,
-       waqif_trans_va_tujuan,
-       waqif_trans_bank
+        waqif_reg_id,
+        waqif_trans_nominal,
+        waqif_trans_status,
+        waqif_trans_va_tujuan,
+        waqif_trans_bank
       } = req.body;
 
-      console.log(JSON.stringify(req.body))      
+      console.log(JSON.stringify(req.body))
 
       const transResult = await prisma.waqif_transaction.create({
         data: {
@@ -311,7 +331,7 @@ module.exports = {
             connect: {
               id: Number(waqif_reg_id),
             },
-          },                    
+          },
           waqif_trans_nominal,
           waqif_trans_status,
           waqif_trans_va_tujuan,
@@ -324,7 +344,7 @@ module.exports = {
         data: transResult,
       });
     } catch (error) {
-     
+
       return res.status(500).json({
         message: "Internal Server Error",
         error: error.message,
@@ -343,7 +363,7 @@ module.exports = {
       const sortType = req.query.order || "asc";
       const id = req.params.id
       const userId = req.user_id;
-      const params = {  waqif : { user_id: Number(userId) }} ;
+      const params = { waqif: { user_id: Number(userId) } };
       //const params = "";
 
       const [count, detailwaqif] = await prisma.$transaction([
@@ -357,9 +377,9 @@ module.exports = {
           where: params,
           include: {
             waqif: {
-                include: {
-                    user: true
-                }
+              include: {
+                user: true
+              }
             },
             waqif_transaction: true
           },
@@ -397,10 +417,10 @@ module.exports = {
         },
         include: {
           waqif_register: {
-              include : {
-                  waqif_transaction: true
-              }
-          },          
+            include: {
+              waqif_transaction: true
+            }
+          },
         },
       });
 
@@ -429,7 +449,7 @@ module.exports = {
     try {
       const userId = req.user_id;
       const mitra_id = req.body.mitra_id;
-      const nominal_final = req.body.nominal_final;      
+      const nominal_final = req.body.nominal_final;
       const amount = req.body.amount;
       const reminderType = req.body.reminder_type;
       const recurringType = req.body.recurring_type;
@@ -460,7 +480,7 @@ module.exports = {
 
       const trx = await prisma.recurring_transaction.create({
         data: {
-          amount: Number(amount),          
+          amount: Number(amount),
           payment_method,
           reminder_type: Number(reminderType),
           recurring_type: Number(recurringType),
@@ -568,18 +588,18 @@ module.exports = {
 
             //   // }
             // },
-            mitra_register:{
+            mitra_register: {
               include: {
                 // mitra_reg_nominal: true,
                 // mitra_reg_nama_wakaf: true,
                 // mitra_reg_file: true,
                 referentor: true,
-                program : {
-                    select: {
-                        pogram_target_amount: false,
-                        kategori_penyaluran: false,
-                        program_title: true
-                    }
+                program: {
+                  select: {
+                    pogram_target_amount: false,
+                    kategori_penyaluran: false,
+                    program_title: true
+                  }
                 }
               }
             },
@@ -750,18 +770,18 @@ module.exports = {
 
             //   // }
             // },
-            mitra_register:{
+            mitra_register: {
               include: {
                 // mitra_reg_nominal: true,
                 // mitra_reg_nama_wakaf: true,
                 // mitra_reg_file: true,
                 referentor: true,
-                program : {
-                    select: {
-                        pogram_target_amount: false,
-                        kategori_penyaluran: false,
-                        program_title: true
-                    }
+                program: {
+                  select: {
+                    pogram_target_amount: false,
+                    kategori_penyaluran: false,
+                    program_title: true
+                  }
                 }
               }
             },
@@ -850,6 +870,6 @@ module.exports = {
       });
     }
   },
-  
-  
+
+
 };
