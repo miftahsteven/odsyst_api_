@@ -536,14 +536,20 @@ module.exports = {
         prisma.waqif.count({
           where: params,
         }),
-        prisma.waqif.findMany({
-          // include: {
-          //   type: true,
-          // },
+        prisma.waqif.findMany({          
           include: {
             waqif_register: {
-              select: {
-                waqif_reg_nominal: true
+              select : {
+                waqif_reg_nominal: true,
+                waqif_reg_payment_method: true,
+                program: {
+                  select: {
+                    program_title: true,
+                    pogram_target_amount: false,
+                    kategori_penyaluran: false,
+                    program_category: false,
+                  },
+                }
               }
             }
           },
@@ -560,7 +566,7 @@ module.exports = {
         waqif.map(async (item) => {
           return {
             ...item,
-            //program_target_amount: Number(item.program_target_amount),
+            waqif_reg_nominal: Number(item.waqif_register.waqif_reg_nominal),
             //total_donation: total_donation._sum.amount || 0,
           };
         })

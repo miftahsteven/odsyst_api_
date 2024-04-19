@@ -14,6 +14,7 @@ router.put("/tarik/:id", authentication, mitra.penarikanMitra);
 
 
 //start here for ERP
+router.get("/all-recap", authentication, mitra.getAllProcessMitraProposalRecap);
 router.get("/all-process", authentication, mitra.getAllProcessMitraProposal);
 router.post("/approved", authentication, mitra.approvalProposal);
 router.get("/all-approver", authentication, mitra.getAllApproverMitraProposal);
