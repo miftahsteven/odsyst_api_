@@ -403,7 +403,8 @@ module.exports = {
         }),
         program_banner: z
           .any().optional(),
-        iswakaf: z.number()
+        iswakaf: z.number(),
+        program_wakaf_type: z.number()
       });
 
       // BODY
@@ -416,7 +417,8 @@ module.exports = {
         program_start_date: new Date(req.body.program_start_date),
         program_target_amount: Number(req.body.program_target_amount),
         program_institusi_id: req.body.program_institusi_id ? parseInt(req.body.program_institusi_id) : undefined,
-        iswakaf: Number(req.body.iswakaf)
+        iswakaf: Number(req.body.iswakaf),
+        program_wakaf_type: Number(req.body.program_wakaf_type)
       });
 
       const program_cat_id = Number(req.body.program_category_id);
