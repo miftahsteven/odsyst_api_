@@ -27,7 +27,16 @@ module.exports = {
         mitra_reg_program_id
       } = req.body;
 
-      //console.log(JSON.stringify(req.body))      
+      //console.log(JSON.stringify(req.body))   
+
+      const program = await prisma.program.findUnique({
+        where: {
+          program_id: Number(mitra_reg_program_id),
+        },
+        select: {
+          program_title: true,
+        },
+      });
 
       const mitraResult = await prisma.mitra.create({
         data: {
@@ -64,6 +73,24 @@ module.exports = {
           }
         },
       });
+
+      const program_title = program ? program.program_title : 'Program tidak terdaftar';
+
+      if (mitraResult) {
+
+        let pn = mitra_phone
+        pn = pn.replace(/\D/g, '');
+        if (pn.substring(0, 1) == '0') {
+          pn = "62" + pn.substring(1).trim()
+        } else if (pn.substring(0, 3) == '62') {
+          pn = "62" + pn.substring(3).trim()
+        }
+
+        const msgId = await sendWhatsapp({
+          wa_number: pn.replace(/[^0-9\.]+/g, ""),
+          text: "Proposal atas nama lembaga " + mitra_nama + " pada program " + program_title + " telah kami terima. Mohon cek secara berkala untuk mengetahui status pengajuan proposal yang telah diajukan. Lakukan konfirmasi kepada kami apabila terjadi duplikasi maupun kesalahan pada proposal. Terima kasih 🙏🏻",
+        });
+      }
 
       return res.status(200).json({
         message: "Sukses",
@@ -102,6 +129,15 @@ module.exports = {
 
       //console.log(JSON.stringify(req.body))      
 
+      const program = await prisma.program.findUnique({
+        where: {
+          program_id: Number(mitra_reg_program_id),
+        },
+        select: {
+          program_title: true,
+        },
+      });
+
       const mitraResult = await prisma.mitra.create({
         data: {
           // user: {
@@ -138,6 +174,24 @@ module.exports = {
           // }
         },
       });
+
+      const program_title = program ? program.program_title : 'Program tidak terdaftar';
+
+      if (mitraResult) {
+
+        let pn = mitra_phone
+        pn = pn.replace(/\D/g, '');
+        if (pn.substring(0, 1) == '0') {
+          pn = "62" + pn.substring(1).trim()
+        } else if (pn.substring(0, 3) == '62') {
+          pn = "62" + pn.substring(3).trim()
+        }
+
+        const msgId = await sendWhatsapp({
+          wa_number: pn.replace(/[^0-9\.]+/g, ""),
+          text: "Proposal atas nama lembaga " + mitra_nama + " dengan Nomor Kontrak: " + mitra_no_kontrak + " pada program " + program_title + " telah kami terima. Mohon cek secara berkala untuk mengetahui status pengajuan proposal yang telah diajukan. Lakukan konfirmasi kepada kami apabila terjadi duplikasi maupun kesalahan pada proposal. Terima kasih 🙏🏻",
+        });
+      }
 
       return res.status(200).json({
         message: "Sukses",
