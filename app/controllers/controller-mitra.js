@@ -27,7 +27,16 @@ module.exports = {
         mitra_reg_program_id
       } = req.body;
 
-      //console.log(JSON.stringify(req.body))      
+      //console.log(JSON.stringify(req.body))   
+
+      const program = await prisma.program.findUnique({
+        where: {
+          program_id: Number(mitra_reg_program_id),
+        },
+        select: {
+          program_title: true,
+        },
+      });
 
       const mitraResult = await prisma.mitra.create({
         data: {
@@ -40,7 +49,7 @@ module.exports = {
           mitra_phone,
           mitra_email,
           program: {
-            connect:{
+            connect: {
               program_id: Number(mitra_reg_program_id)
             }
           },
@@ -64,6 +73,125 @@ module.exports = {
           }
         },
       });
+
+      const program_title = program ? program.program_title : 'Program tidak terdaftar';
+
+      if (mitraResult) {
+
+        let pn = mitra_phone
+        pn = pn.replace(/\D/g, '');
+        if (pn.substring(0, 1) == '0') {
+          pn = "62" + pn.substring(1).trim()
+        } else if (pn.substring(0, 3) == '62') {
+          pn = "62" + pn.substring(3).trim()
+        }
+
+        const msgId = await sendWhatsapp({
+          wa_number: pn.replace(/[^0-9\.]+/g, ""),
+          text: "Proposal atas nama lembaga " + mitra_nama + " pada program " + program_title + " telah kami terima. Mohon cek secara berkala untuk mengetahui status pengajuan proposal yang telah diajukan. Lakukan konfirmasi kepada kami apabila terjadi duplikasi maupun kesalahan pada proposal. Terima kasih 🙏🏻",
+        });
+      }
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: mitraResult,
+      });
+    } catch (error) {
+
+      return res.status(500).json({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+
+  async createErp(req, res) {
+    try {
+      const userId = req.user_id;
+
+      const {
+        mitra_nama,
+        mitra_phone,
+        mitra_email,
+        mitra_nama_pendiri,
+        // mitra_nik,
+        mitra_npwp,
+        // mitra_siup_no,
+        // mitra_siup_date,
+        mitra_alamat,
+        // mitra_prov_id,
+        // mitra_city_id,
+        // mitra_kodepos,
+        mitra_badan_usaha_category,
+        mitra_no_kontrak,
+        mitra_reg_program_id
+      } = req.body;
+
+      //console.log(JSON.stringify(req.body))      
+
+      const program = await prisma.program.findUnique({
+        where: {
+          program_id: Number(mitra_reg_program_id),
+        },
+        select: {
+          program_title: true,
+        },
+      });
+
+      const mitraResult = await prisma.mitra.create({
+        data: {
+          // user: {
+          //   connect: {
+          //     user_id: Number(userId),
+          //   },
+          // },
+          mitra_nama,
+          mitra_phone,
+          mitra_email,
+          program: {
+            connect: {
+              program_id: Number(mitra_reg_program_id)
+            }
+          },
+          mitra_nama_pendiri,
+          // mitra_nik,
+          mitra_npwp,
+          // mitra_siup_no,
+          // mitra_siup_date: moment().toISOString(mitra_siup_date),
+          mitra_alamat,
+          // mitra_kodepos,
+          mitra_badan_usaha_category: Number(mitra_badan_usaha_category),
+          mitra_no_kontrak,
+          // provinces: {
+          //   connect: {
+          //     prov_id: Number(mitra_prov_id),
+          //   }
+          // },
+          // cities: {
+          //   connect: {
+          //     city_id: Number(mitra_city_id),
+          //   }
+          // }
+        },
+      });
+
+      const program_title = program ? program.program_title : 'Program tidak terdaftar';
+
+      if (mitraResult) {
+
+        let pn = mitra_phone
+        pn = pn.replace(/\D/g, '');
+        if (pn.substring(0, 1) == '0') {
+          pn = "62" + pn.substring(1).trim()
+        } else if (pn.substring(0, 3) == '62') {
+          pn = "62" + pn.substring(3).trim()
+        }
+
+        const msgId = await sendWhatsapp({
+          wa_number: pn.replace(/[^0-9\.]+/g, ""),
+          text: "Proposal atas nama lembaga " + mitra_nama + " dengan Nomor Kontrak: " + mitra_no_kontrak + " pada program " + program_title + " telah kami terima. Mohon cek secara berkala untuk mengetahui status pengajuan proposal yang telah diajukan. Lakukan konfirmasi kepada kami apabila terjadi duplikasi maupun kesalahan pada proposal. Terima kasih 🙏🏻",
+        });
+      }
 
       return res.status(200).json({
         message: "Sukses",
@@ -131,18 +259,89 @@ module.exports = {
             }
           },
           program: {
-            connect:{
+            connect: {
               program_id: Number(mitra_reg_program_id)
             }
           },
           mitra_reg_nama_wakaf,
           mitra_reg_alamat_wakaf,
           mitra_reg_deskripsi_wakaf,
-          mitra_reg_date_start: moment().toISOString(mitra_reg_date_start),
-          mitra_reg_date_end : moment().toISOString(mitra_reg_date_end),  
+          mitra_reg_date_start: moment(mitra_reg_date_start).toISOString(),
+          mitra_reg_date_end: moment(mitra_reg_date_end).toISOString(),
           mitra_reg_nominal: Number(mitra_reg_nominal),
           mitra_reg_durasi_value: Number(mitra_reg_durasi_value),
           mitra_reg_durasi_satuan: Number(mitra_reg_durasi_satuan),
+          mitra_reg_file: `uploads/${file.filename}`
+        },
+      });
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: regResult,
+      });
+    } catch (error) {
+
+      return res.status(500).json({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+
+  async createMitraRegErp(req, res) {
+    try {
+
+
+      const file = req.file;
+
+      if (!file) {
+        return res.status(400).json({
+          message: "Proposal harus diupload",
+        });
+      }
+
+      const maxSize = 5000000;
+      if (file.size > maxSize) {
+        await fs.unlink(file.path);
+
+        return res.status(400).json({
+          message: "Ukuran Proposal Terlalu Besar",
+        });
+      }
+
+
+      const {
+        mitra_id,
+        mitra_reg_nominal,
+        mitra_reg_referentor,
+        mitra_reg_program_id,
+        mitra_reg_date_start,
+        mitra_reg_date_end
+      } = req.body;
+
+      //console.log(JSON.stringify(req.body))      
+
+      const regResult = await prisma.mitra_register.create({
+        data: {
+          mitra: {
+            connect: {
+              id: Number(mitra_id),
+            }
+          },
+          // mitra_reg_wakaf_category: Number(mitra_reg_wakaf_category),
+          referentor: {
+            connect: {
+              id: Number(mitra_reg_referentor)
+            }
+          },
+          program: {
+            connect: {
+              program_id: Number(mitra_reg_program_id)
+            }
+          },
+          mitra_reg_nominal: Number(mitra_reg_nominal),
+          mitra_reg_date_start: moment(mitra_reg_date_start).toISOString(),
+          mitra_reg_date_end: moment(mitra_reg_date_end).toISOString(),
           mitra_reg_file: `uploads/${file.filename}`
         },
       });
@@ -720,7 +919,7 @@ module.exports = {
 
             //   // }
             // },
-            mitra_register:{
+            mitra_register: {
               include: {
                 // mitra_reg_nominal: true,
                 // mitra_reg_nama_wakaf: true,
@@ -728,12 +927,12 @@ module.exports = {
                 //mitra_reg_date_start: true,
                 //mitra_reg_date_end: true,
                 referentor: true,
-                program : {
-                    select: {
-                        pogram_target_amount: false,
-                        kategori_penyaluran: false,
-                        program_title: true
-                    }
+                program: {
+                  select: {
+                    pogram_target_amount: false,
+                    kategori_penyaluran: false,
+                    program_title: true
+                  }
                 }
               }
             },
