@@ -75,13 +75,13 @@ module.exports = {
             //isduplicate: duplicate??0
           })
 
-          console.log(JSON.stringify(dataTrans))
+          //console.log(JSON.stringify(dataTrans))
 
         }
 
-        // await prisma.ebs_staging.createMany({
-        //   data: dataTrans,
-        // });
+        await prisma.ebs_staging.createMany({
+          data: dataTrans,
+        });
 
         // res.status(200).json({
         //   message: "Sukses Generate Data MT940",
