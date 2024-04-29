@@ -57,6 +57,7 @@ model program {
   iswakaf               Int?                    @default(0) @db.SmallInt
   program_wakaf_type    Int?                    @default(0)
   budget                budget[]
+  mitra                 mitra[]
   mitra_register        mitra_register[]
   notification          notification[]
   kategori_penyaluran   kategori_penyaluran?    @relation(fields: [kat_penyaluran_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "program_FK")
@@ -819,6 +820,7 @@ model waqif {
   waqif_agama      Int?             @default(0)
   waqif_pekerjaan  String?          @db.VarChar(255)
   waqif_regdate    DateTime?        @default(now()) @db.Timestamp(0)
+  waqif_status     Int?             @default(1) @db.SmallInt
   cities           cities?          @relation(fields: [waqif_city_id], references: [city_id], onDelete: NoAction, onUpdate: NoAction, map: "waqif_cities_FK")
   provinces        provinces?       @relation(fields: [waqif_prov_id], references: [prov_id], onDelete: NoAction, onUpdate: NoAction, map: "waqif_provinces_FK")
   user             user?            @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "waqif_user_FK")
@@ -841,6 +843,7 @@ model waqif_register {
   waqif_reg_doa            String?             @db.Text
   waqif_reg_ishide         Int?                @default(0) @db.SmallInt
   waqif_reg_regdate        DateTime?           @default(now()) @db.Timestamp(0)
+  waqif_reg_file_asuransi  String?             @db.Text
   program                  program?            @relation(fields: [waqif_reg_program_id], references: [program_id], onDelete: NoAction, onUpdate: NoAction, map: "waqif_register_program_FK")
   waqif                    waqif?              @relation(fields: [waqif_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "waqif_register_waqif_FK")
   waqif_transaction        waqif_transaction[]
@@ -868,38 +871,45 @@ model bank {
 }
 
 model mitra {
-  id                       Int                    @id @default(autoincrement())
-  mitra_nama               String?                @db.VarChar(255)
-  mitra_phone              String?                @db.VarChar(16)
-  mitra_email              String?                @db.VarChar(255)
-  mitra_nama_pendiri       String?                @db.VarChar(255)
-  mitra_nik                String?                @db.VarChar(16)
-  mitra_npwp               String?                @db.VarChar(25)
-  mitra_siup_no            String?                @db.VarChar(100)
-  mitra_siup_date          DateTime?              @db.Date
-  mitra_alamat             String?                @db.Text
-  mitra_city_id            Int?
-  mitra_prov_id            Int?
-  mitra_kodepos            String?                @db.VarChar(10)
-  mitra_user_id            Int?
-  approved                 Int?                   @default(0) @db.SmallInt
-  dana_approval            Int?                   @default(0)
-  status_bayar             Int?                   @default(0)
-  dana_final_disetujui     Int?
-  status_request_penarikan Int?                   @default(0) @db.SmallInt
-  mitra_bank               String?                @db.VarChar(15)
-  mitra_no_rekening        String?                @db.VarChar(16)
-  mitra_nama_rekening      String?                @db.VarChar(100)
-  cities                   cities?                @relation(fields: [mitra_city_id], references: [city_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_cities_FK")
-  provinces                provinces?             @relation(fields: [mitra_prov_id], references: [prov_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_provinces_FK")
-  user                     user?                  @relation(fields: [mitra_user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_user_FK")
-  mitra_approval           mitra_approval[]
-  mitra_penarikan_dana     mitra_penarikan_dana[]
-  mitra_register           mitra_register[]
+  id                         Int                    @id @default(autoincrement())
+  mitra_nama                 String?                @db.VarChar(255)
+  mitra_phone                String?                @db.VarChar(16)
+  mitra_email                String?                @db.VarChar(255)
+  mitra_nama_pendiri         String?                @db.VarChar(255)
+  mitra_badan_usaha_category Int?                   @default(0) @db.SmallInt
+  mitra_nik                  String?                @db.VarChar(16)
+  mitra_npwp                 String?                @db.VarChar(25)
+  mitra_siup_no              String?                @db.VarChar(100)
+  mitra_siup_date            DateTime?              @db.Date
+  mitra_alamat               String?                @db.Text
+  mitra_city_id              Int?
+  mitra_prov_id              Int?
+  mitra_kodepos              String?                @db.VarChar(10)
+  mitra_user_id              Int?
+  approved                   Int?                   @default(0) @db.SmallInt
+  dana_approval              Int?                   @default(0)
+  status_bayar               Int?                   @default(0)
+  dana_final_disetujui       Int?
+  status_request_penarikan   Int?                   @default(0) @db.SmallInt
+  mitra_bank                 String?                @db.VarChar(15)
+  mitra_no_rekening          String?                @db.VarChar(16)
+  mitra_nama_rekening        String?                @db.VarChar(100)
+  mitra_status               Int?                   @default(1) @db.SmallInt
+  mitra_no_kontrak           String?                @db.VarChar(16)
+  mitra_program_id           Int?
+  created_date               DateTime?              @default(now()) @db.Timestamp(0)
+  cities                     cities?                @relation(fields: [mitra_city_id], references: [city_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_cities_FK")
+  program                    program?               @relation(fields: [mitra_program_id], references: [program_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_program_FK")
+  provinces                  provinces?             @relation(fields: [mitra_prov_id], references: [prov_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_provinces_FK")
+  user                       user?                  @relation(fields: [mitra_user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_user_FK")
+  mitra_approval             mitra_approval[]
+  mitra_penarikan_dana       mitra_penarikan_dana[]
+  mitra_register             mitra_register[]
 
   @@index([mitra_city_id], map: "mitra_cities_FK")
   @@index([mitra_prov_id], map: "mitra_provinces_FK")
   @@index([mitra_user_id], map: "mitra_user_FK")
+  @@index([mitra_program_id], map: "mitra_program_FK")
 }
 
 model mitra_register {
@@ -915,6 +925,8 @@ model mitra_register {
   mitra_reg_durasi_satuan   Int?        @db.SmallInt
   mitra_reg_file            String?     @db.Text
   mitra_reg_program_id      Int?
+  mitra_reg_date_start      DateTime?   @db.Date
+  mitra_reg_date_end        DateTime?   @db.Date
   mitra                     mitra?      @relation(fields: [mitra_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_register_mitra_FK")
   program                   program?    @relation(fields: [mitra_reg_program_id], references: [program_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_register_program_FK")
   referentor                referentor? @relation(fields: [mitra_reg_referentor], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_register_referentor_FK")
