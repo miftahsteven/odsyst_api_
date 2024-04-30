@@ -1,7 +1,7 @@
 const { prisma } = require("../../prisma/client");
 const { Prisma } = require("@prisma/client");
 const fs = require("fs");
-const { subMonths, subDays } = require('date-fns');
+const { subMonths, subDays, format, endOfMonth } = require('date-fns');
 const { some } = require("lodash");
 const { sendWhatsapp } = require("../helper/whatsapp");
 const phoneFormatter = require('phone-formatter');
@@ -527,10 +527,14 @@ module.exports = {
       const status = Number(req.query.status || 0);
       const skip = (page - 1) * perPage;
       const keyword = req.query.nama || "";
+      const bulan = Number(req.query.bulan || 0);
+      const tahun = Number(req.query.tahun || 2024);
       const user_type = req.query.user_type || "";
       const category = req.query.category || "";
       const sortBy = req.query.sortBy || "create_date";
       const sortType = req.query.order || "desc";
+      console.log(bulan);
+      console.log(tahun);
 
       // const params = {
       //   nama: {
@@ -544,8 +548,20 @@ module.exports = {
           contains: keyword,
         },
         status_bayar: 0,
+        // create_date: {
+        //   contains: `-${bulan}-`,
+        // },
         approved: 0,
       };
+      // const proposalss = await prisma.proposal.findMany({
+      //   where: {
+      //     create_date: {
+      //       gte: format(new Date(2024, bulan, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+      //       lte: format(endOfMonth(new Date(2024, bulan)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+      //     },
+      //   },
+      // });
+      // console.log(proposalss);
       //approved and waiting to payment
       const params_waitpayment = {
         nama: {
@@ -580,6 +596,53 @@ module.exports = {
         status_bayar: 0,
         approved: 2
       };
+
+      if (bulan == 0 && tahun !== 0) {
+        params.create_date = {
+          gte: format(new Date(tahun, 0, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+          lte: format(endOfMonth(new Date(tahun, 11)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+        };
+        params_waitpayment.create_date = {
+          gte: format(new Date(tahun, 0, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+          lte: format(endOfMonth(new Date(tahun, 11)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+        };
+        params_tolak.create_date = {
+          gte: format(new Date(tahun, 0, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+          lte: format(endOfMonth(new Date(tahun, 11)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+        };
+        params_siapbayar.create_date = {
+          gte: format(new Date(tahun, 0, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+          lte: format(endOfMonth(new Date(tahun, 11)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+        };
+        params_paid.create_date = {
+          gte: format(new Date(tahun, 0, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+          lte: format(endOfMonth(new Date(tahun, 11)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+        };
+      }
+
+      if (bulan !== 0) {
+        params.create_date = {
+          gte: format(new Date(tahun, bulan-1, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+          lte: format(endOfMonth(new Date(tahun, bulan-1)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+        };
+        params_waitpayment.create_date = {
+          gte: format(new Date(tahun, bulan-1, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+          lte: format(endOfMonth(new Date(tahun, bulan-1)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+        };
+        params_tolak.create_date = {
+          gte: format(new Date(tahun, bulan-1, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+          lte: format(endOfMonth(new Date(tahun, bulan-1)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+        };
+        params_siapbayar.create_date = {
+          gte: format(new Date(tahun, bulan-1, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+          lte: format(endOfMonth(new Date(tahun, bulan-1)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+        };
+        params_paid.create_date = {
+          gte: format(new Date(tahun, bulan-1, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+          lte: format(endOfMonth(new Date(tahun, bulan-1)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+        };
+      }
+
       let whereclaus = "";
       if (status === 0) {
         whereclaus = params
