@@ -183,6 +183,7 @@ model password_token {
 model UserType {
   user_type_id   Int    @id @default(autoincrement())
   user_type_name String @db.VarChar(100)
+  user_platform  Int?   @default(0) @db.SmallInt
   user           user[]
 
   @@map("user_type")
