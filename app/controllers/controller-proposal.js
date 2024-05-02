@@ -248,6 +248,167 @@ module.exports = {
     }
   },
 
+  async createProposalErp(req, res) {
+    try {
+      const userId = 3;
+      const program_id = req.body.program_id;
+      const proposal_kategori = req.body.proposal_kategori;
+      const nik_mustahiq = req.body.nik_mustahiq;
+      const nama = req.body.nama;
+      const alamat_rumah = req.body.alamat_rumah;
+      const nama_pemberi_rekomendasi = req.body.nama_pemberi_rekomendasi;
+      const no_telp_pemberi_rekomendasi = req.body.no_telp_pemberi_rekomendasi;
+      const dana_yang_diajukan = req.body.dana_yang_diajukan;
+
+      //console.log(JSON.stringify(req.body))
+      const niks = Number(nik_mustahiq)
+      const validasi = parsenik.parse(niks)
+      console.log(validasi)
+      if (!nik_mustahiq) {
+        return res.status(400).json({ message: "NIK wajib diisi" });
+      } else if (!nama) {
+        return res.status(400).json({ message: "Nama wajib diisi" });
+      } else if (!userId) {
+        return res.status(400).json({ message: "User ID wajib diisi" });
+      } else if (!program_id) {
+        return res.status(400).json({ message: "Program ID wajib diisi" });
+      } else if (!proposal_kategori) {
+        return res.status(400).json({ message: "Kategori Proposal wajib diisi" });
+      } else if (!nama_pemberi_rekomendasi) {
+        return res.status(400).json({ message: "Nama Pemberi Rekomendasi wajib diisi" });
+      } else if (!no_telp_pemberi_rekomendasi) {
+        return res.status(400).json({ message: "Nomor Telepon Pemberi Rekomendasi wajib diisi" });
+      } else if (validasi.valid === false) {
+        return res.status(400).json({ message: "NIK tidak valid" });
+      }
+
+      const files = {};
+      for (let i = 1; i <= 7; i++) {
+        const file = req.files[`lampiran${i}`];
+        console.log(file)
+        if (file) {
+          console.log(file?.[0])
+          files[`lampiran${i}`] = "uploads/" + file?.[0].filename;
+        }
+      }
+
+      const program = await prisma.program.findUnique({
+        where: {
+          program_id: Number(program_id),
+        },
+        select: {
+          program_title: true,
+        },
+      });
+
+      const users = await prisma.institusi.findMany();
+      const institute = users.filter((data) => data.institusi_user_id === userId)
+
+      const currentDate = new Date();
+      const formattedDate = currentDate.toISOString().slice(0, 10).replace(/-/g, '');
+      const empatnik = nik_mustahiq.slice(-4);
+      const no_proposal = formattedDate + empatnik;
+      const sixMonthsAgo = subMonths(new Date(), 6);
+      const aDayAgo = subDays(new Date(), 1);
+
+      if (institute < 1) {
+        const existingProposal = await prisma.proposal.findFirst({
+          where: {
+            program_id: Number(program_id),
+            program: {
+              program_category_id: { in: [1, 2, 4] },
+            },
+            nik_mustahiq,
+            create_date: {
+              gte: sixMonthsAgo,
+            },
+            approved: {
+              not: 2,
+            },
+          },
+        });
+        if (existingProposal) {
+          return res.status(400).json({
+            message: "Anda telah mengajukan proposal pada program berikut dalam kurun waktu 6 bulan",
+          });
+        }
+      } else {
+        const existingProposal = await prisma.proposal.findFirst({
+          where: {
+            program_id: Number(program_id),
+            program: {
+              program_category_id: { in: [1, 2, 4] },
+            },
+            nik_mustahiq,
+            create_date: {
+              gte: aDayAgo,
+            },
+            approved: {
+              not: 2,
+            },
+          },
+        });
+        if (existingProposal) {
+          return res.status(400).json({
+            message: "Anda telah mengajukan proposal pada program berikut dan baru dapat mengajukan kembali setelah 1 hari",
+          });
+        }
+      }
+
+      const program_title = program ? program.program_title : 'Program tidak terdaftar';
+
+      const ProposalResult = await prisma.proposal.create({
+        data: {
+          user: {
+            connect: {
+              user_id: Number(userId),
+            },
+          },
+          program: {
+            connect: {
+              program_id: Number(program_id),
+            },
+          },
+          proposal_kategori: Number(proposal_kategori),
+          nik_mustahiq,
+          no_proposal,
+          nama,
+          alamat_rumah,
+          dana_yang_diajukan: Number(dana_yang_diajukan),
+          nama_pemberi_rekomendasi,
+          no_telp_pemberi_rekomendasi,
+          ...files,
+        },
+      });
+
+      if (ProposalResult) {
+
+        let pn = no_telp_pemberi_rekomendasi
+        pn = pn.replace(/\D/g, '');
+        if (pn.substring(0, 1) == '0') {
+          pn = "62" + pn.substring(1).trim()
+        } else if (pn.substring(0, 3) == '62') {
+          pn = "62" + pn.substring(3).trim()
+        }
+
+        const msgId = await sendWhatsapp({
+          wa_number: pn.replace(/[^0-9\.]+/g, ""),
+          text: "Proposal Atas Nama " + nama + " dan NIK " + nik_mustahiq + " pada program " + program_title + " telah kami terima. Mohon lakukan konfirmasi kepada kami apabila terjadi duplikasi maupun kesalahan pada proposal. Terima kasih",
+        });
+      }
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: ProposalResult,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  },
+
   async doneProposal(req, res) {
     try {
       const id = req.params.id
@@ -622,24 +783,24 @@ module.exports = {
 
       if (bulan !== 0) {
         params.create_date = {
-          gte: format(new Date(tahun, bulan-1, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
-          lte: format(endOfMonth(new Date(tahun, bulan-1)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+          gte: format(new Date(tahun, bulan - 1, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+          lte: format(endOfMonth(new Date(tahun, bulan - 1)), "yyyy-MM-dd'T'23:59:59.999xxx"),
         };
         params_waitpayment.create_date = {
-          gte: format(new Date(tahun, bulan-1, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
-          lte: format(endOfMonth(new Date(tahun, bulan-1)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+          gte: format(new Date(tahun, bulan - 1, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+          lte: format(endOfMonth(new Date(tahun, bulan - 1)), "yyyy-MM-dd'T'23:59:59.999xxx"),
         };
         params_tolak.create_date = {
-          gte: format(new Date(tahun, bulan-1, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
-          lte: format(endOfMonth(new Date(tahun, bulan-1)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+          gte: format(new Date(tahun, bulan - 1, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+          lte: format(endOfMonth(new Date(tahun, bulan - 1)), "yyyy-MM-dd'T'23:59:59.999xxx"),
         };
         params_siapbayar.create_date = {
-          gte: format(new Date(tahun, bulan-1, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
-          lte: format(endOfMonth(new Date(tahun, bulan-1)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+          gte: format(new Date(tahun, bulan - 1, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+          lte: format(endOfMonth(new Date(tahun, bulan - 1)), "yyyy-MM-dd'T'23:59:59.999xxx"),
         };
         params_paid.create_date = {
-          gte: format(new Date(tahun, bulan-1, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
-          lte: format(endOfMonth(new Date(tahun, bulan-1)), "yyyy-MM-dd'T'23:59:59.999xxx"),
+          gte: format(new Date(tahun, bulan - 1, 1), "yyyy-MM-dd'T'HH:mm:ss.SSSxxx"),
+          lte: format(endOfMonth(new Date(tahun, bulan - 1)), "yyyy-MM-dd'T'23:59:59.999xxx"),
         };
       }
 

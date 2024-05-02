@@ -85,30 +85,30 @@ module.exports = {
         waqif_reg_ishide
       } = req.body;
 
-      //console.log(JSON.stringify(req.body))      
+      console.log(JSON.stringify(req.body))
       let file = req.file;
 
-      if (waqif_reg_type = 4) {
-        if (!file) {
-          return res.status(400).json({
-            message: "Asuransi harus diupload",
-          });
-        }
-        const maxSize = 5000000;
-        if (file.size > maxSize) {
-          await fs.unlink(file.path);
+      // if (waqif_reg_type = 4) {
+      //   if (!file) {
+      //     return res.status(400).json({
+      //       message: "Asuransi harus diupload",
+      //     });
+      //   }
+      //   const maxSize = 5000000;
+      //   if (file.size > maxSize) {
+      //     await fs.unlink(file.path);
 
-          return res.status(400).json({
-            message: "Ukuran File Terlalu Besar",
-          });
-        }
-      }
+      //     return res.status(400).json({
+      //       message: "Ukuran File Terlalu Besar",
+      //     });
+      //   }
+      // }
 
 
       const regData = {
         waqif: {
           connect: {
-            id: Number(wakif_id),
+            id: Number(waqif_id),
           },
         },
         waqif_reg_type: Number(waqif_reg_type),
@@ -124,7 +124,7 @@ module.exports = {
         waqif_reg_doa,
         waqif_reg_ishide: Number(waqif_reg_ishide)
       };
-      
+
       if (waqif_reg_type == 4) {
         if (!file) {
           return res.status(400).json({
@@ -252,7 +252,7 @@ module.exports = {
         waqif_reg_doa,
         waqif_reg_ishide: Number(waqif_reg_ishide)
       };
-      
+
       if (waqif_reg_type == 4) {
         if (!file) {
           return res.status(400).json({
@@ -536,10 +536,10 @@ module.exports = {
         prisma.waqif.count({
           where: params,
         }),
-        prisma.waqif.findMany({          
+        prisma.waqif.findMany({
           include: {
             waqif_register: {
-              select : {
+              select: {
                 waqif_reg_nominal: true,
                 waqif_reg_payment_method: true,
                 program: {
