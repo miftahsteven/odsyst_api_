@@ -253,7 +253,7 @@ module.exports = {
       const userId = 3;
       const program_id = req.body.program_id;
       const proposal_kategori = req.body.proposal_kategori;
-      const nik_mustahiq = req.body.nik_mustahiq;
+      const nik_mustahiq = '1234567812345678';
       const nama = req.body.nama;
       const alamat_rumah = req.body.alamat_rumah;
       const nama_pemberi_rekomendasi = req.body.nama_pemberi_rekomendasi;
@@ -264,9 +264,7 @@ module.exports = {
       const niks = Number(nik_mustahiq)
       const validasi = parsenik.parse(niks)
       console.log(validasi)
-      if (!nik_mustahiq) {
-        return res.status(400).json({ message: "NIK wajib diisi" });
-      } else if (!nama) {
+      if (!nama) {
         return res.status(400).json({ message: "Nama wajib diisi" });
       } else if (!userId) {
         return res.status(400).json({ message: "User ID wajib diisi" });
@@ -274,12 +272,8 @@ module.exports = {
         return res.status(400).json({ message: "Program ID wajib diisi" });
       } else if (!proposal_kategori) {
         return res.status(400).json({ message: "Kategori Proposal wajib diisi" });
-      } else if (!nama_pemberi_rekomendasi) {
-        return res.status(400).json({ message: "Nama Pemberi Rekomendasi wajib diisi" });
       } else if (!no_telp_pemberi_rekomendasi) {
         return res.status(400).json({ message: "Nomor Telepon Pemberi Rekomendasi wajib diisi" });
-      } else if (validasi.valid === false) {
-        return res.status(400).json({ message: "NIK tidak valid" });
       }
 
       const files = {};
@@ -306,54 +300,54 @@ module.exports = {
 
       const currentDate = new Date();
       const formattedDate = currentDate.toISOString().slice(0, 10).replace(/-/g, '');
-      const empatnik = nik_mustahiq.slice(-4);
+      const empatnik = '0104';
       const no_proposal = formattedDate + empatnik;
       const sixMonthsAgo = subMonths(new Date(), 6);
       const aDayAgo = subDays(new Date(), 1);
 
-      if (institute < 1) {
-        const existingProposal = await prisma.proposal.findFirst({
-          where: {
-            program_id: Number(program_id),
-            program: {
-              program_category_id: { in: [1, 2, 4] },
-            },
-            nik_mustahiq,
-            create_date: {
-              gte: sixMonthsAgo,
-            },
-            approved: {
-              not: 2,
-            },
-          },
-        });
-        if (existingProposal) {
-          return res.status(400).json({
-            message: "Anda telah mengajukan proposal pada program berikut dalam kurun waktu 6 bulan",
-          });
-        }
-      } else {
-        const existingProposal = await prisma.proposal.findFirst({
-          where: {
-            program_id: Number(program_id),
-            program: {
-              program_category_id: { in: [1, 2, 4] },
-            },
-            nik_mustahiq,
-            create_date: {
-              gte: aDayAgo,
-            },
-            approved: {
-              not: 2,
-            },
-          },
-        });
-        if (existingProposal) {
-          return res.status(400).json({
-            message: "Anda telah mengajukan proposal pada program berikut dan baru dapat mengajukan kembali setelah 1 hari",
-          });
-        }
-      }
+      // if (institute < 1) {
+      //   const existingProposal = await prisma.proposal.findFirst({
+      //     where: {
+      //       program_id: Number(program_id),
+      //       program: {
+      //         program_category_id: { in: [1, 2, 4] },
+      //       },
+      //       nik_mustahiq,
+      //       create_date: {
+      //         gte: sixMonthsAgo,
+      //       },
+      //       approved: {
+      //         not: 2,
+      //       },
+      //     },
+      //   });
+      //   if (existingProposal) {
+      //     return res.status(400).json({
+      //       message: "Anda telah mengajukan proposal pada program berikut dalam kurun waktu 6 bulan",
+      //     });
+      //   }
+      // } else {
+      //   const existingProposal = await prisma.proposal.findFirst({
+      //     where: {
+      //       program_id: Number(program_id),
+      //       program: {
+      //         program_category_id: { in: [1, 2, 4] },
+      //       },
+      //       nik_mustahiq,
+      //       create_date: {
+      //         gte: aDayAgo,
+      //       },
+      //       approved: {
+      //         not: 2,
+      //       },
+      //     },
+      //   });
+      //   if (existingProposal) {
+      //     return res.status(400).json({
+      //       message: "Anda telah mengajukan proposal pada program berikut dan baru dapat mengajukan kembali setelah 1 hari",
+      //     });
+      //   }
+      // }
 
       const program_title = program ? program.program_title : 'Program tidak terdaftar';
 
