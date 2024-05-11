@@ -6,6 +6,7 @@ const { some } = require("lodash");
 const { sendWhatsapp } = require("../helper/whatsapp");
 const phoneFormatter = require('phone-formatter');
 const parsenik = require("parsenik");
+const { sendImkas } = require("../helper/imkas");
 
 module.exports = {
   async details(req, res) {
@@ -425,6 +426,16 @@ module.exports = {
           }
         }
       });
+
+      if (proposal) {
+        const check = await sendImkas({
+          phone: '085331026363',
+          nom: '5000',
+          id: '1',
+          desc: "Testing",
+        });
+        console.log(check);
+      }
 
       console.log(proposal)
 

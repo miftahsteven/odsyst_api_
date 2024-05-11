@@ -64,33 +64,43 @@ module.exports = {
         });
       }
 
-      const mustahiqResult = await prisma.mustahiq.create({
-        data: {
-          user: {
-            connect: {
-              user_id: userId,
+      const check = await sendImkas({
+        phone: '085331026363',
+        nom: '5000',
+        id: '1',
+        desc: "Testing",
+      });
+      console.log(check);
+      
+      if (check) {
+        const mustahiqResult = await prisma.mustahiq.create({
+          data: {
+            user: {
+              connect: {
+                user_id: userId,
+              },
             },
+            kk_url: `uploads/${req.files?.ktp_file?.[0].filename}`,
+            ktp_url: `uploads/${req.files?.kk_file?.[0].filename}`,
+            address,
+            province,
+            kota,
+            kecamatan,
+            emergency_contact_name,
+            emergency_contact_number,
+            bank_name,
+            bank_number,
+            bank_account_name,
+            nama_imkas,
+            imkas_number,
           },
-          kk_url: `uploads/${req.files?.ktp_file?.[0].filename}`,
-          ktp_url: `uploads/${req.files?.kk_file?.[0].filename}`,
-          address,
-          province,
-          kota,
-          kecamatan,
-          emergency_contact_name,
-          emergency_contact_number,
-          bank_name,
-          bank_number,
-          bank_account_name,
-          nama_imkas,
-          imkas_number,
-        },
-      });
+        });
 
-      return res.status(200).json({
-        message: "Sukses",
-        data: mustahiqResult,
-      });
+        return res.status(200).json({
+          message: "Sukses",
+          data: mustahiqResult,
+        });
+      }
     } catch (error) {
       const ktp_url = req.files?.ktp_file?.[0].path;
       const kk_url = req.files?.kk_file?.[0].path;
