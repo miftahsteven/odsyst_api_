@@ -427,18 +427,6 @@ module.exports = {
         }
       });
 
-      if (proposal) {
-        const check = await sendImkas({
-          phone: '085331026363',
-          nom: '5000',
-          id: '1',
-          desc: "Testing",
-        });
-        console.log(check);
-      }
-
-      console.log(proposal)
-
       const currentDate = new Date();
       const formattedDate = currentDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
@@ -456,6 +444,18 @@ module.exports = {
         } else if (pn.substring(0, 3) == '+62') {
           pn = "62" + pn.substring(3).trim()
         }
+
+        if (proposal) {
+          const check = await sendImkas({
+            phone: pn.replace(/[^0-9\.]+/g, ""),
+            nom: proposal.dana_yang_disetujui,
+            id: '1',
+            desc: "Testing Check",
+          });
+          console.log(check);
+        }
+
+        console.log(proposal)
 
         const formattedDana = proposal.dana_yang_disetujui.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
 

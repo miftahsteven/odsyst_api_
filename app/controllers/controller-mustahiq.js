@@ -64,14 +64,21 @@ module.exports = {
         });
       }
 
+      let pn = imkas_number
+      if (pn.substring(0, 1) == '0') {
+        pn = "62" + pn.substring(1).trim()
+      } else if (pn.substring(0, 3) == '+62') {
+        pn = "62" + pn.substring(3).trim()
+      }
+
       const check = await sendImkas({
-        phone: '085331026363',
-        nom: '5000',
+        phone: pn.replace(/[^0-9\.]+/g, ""),
+        nom: '0',
         id: '1',
-        desc: "Testing",
+        desc: "Testing Check",
       });
       console.log(check);
-      
+
       if (check) {
         const mustahiqResult = await prisma.mustahiq.create({
           data: {
