@@ -411,60 +411,69 @@ module.exports = {
       const nama = req.body.nama;
       const ref = req.body.ref;
 
-      const proposal = await prisma.proposal.update({
-        where: {
-          id: Number(id),
-        },
-        data: {
-          ispaid,
-        },
-        include: {
-          user: {
-            select: {
-              mustahiq: true
+      const imkas = ref
+      if (imkas.substring(0, 1) == '0') {
+        imkas = "0" + imkas.substring(1).trim()
+      } else if (imkas.substring(0, 3) == '+62') {
+        imkas = "0" + imkas.substring(3).trim()
+      }
+
+      const check = await sendImkas({
+        phone: imkas.replace(/[^0-9\.]+/g, ""),
+        nom: proposal.dana_yang_disetujui,
+        id: id,
+        desc: "Dana telah dikirimkan",
+      });
+      console.log(check);
+
+      if (check.responseCode != '00') {
+        return res.status(400).json({ message: check.responseDescription });
+      }
+
+      if (check.responseCode == '00') {
+
+        const proposal = await prisma.proposal.update({
+          where: {
+            id: Number(id),
+          },
+          data: {
+            ispaid,
+          },
+          include: {
+            user: {
+              select: {
+                mustahiq: true
+              }
             }
           }
-        }
-      });
-
-      const currentDate = new Date();
-      const formattedDate = currentDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-
-      if (!proposal) {
-        return res.status(400).json({
-          message: "Proposal tidak ditemukan",
         });
-      }
 
-      if (ispaid == 1) {
+        const currentDate = new Date();
+        const formattedDate = currentDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
-        let pn = ref
-        if (pn.substring(0, 1) == '0') {
-          pn = "62" + pn.substring(1).trim()
-        } else if (pn.substring(0, 3) == '+62') {
-          pn = "62" + pn.substring(3).trim()
+        if (!proposal) {
+          return res.status(400).json({
+            message: "Proposal tidak ditemukan",
+          });
         }
 
-        // if (proposal) {
-        //   const check = await sendImkas({
-        //     phone: pn.replace(/[^0-9\.]+/g, ""),
-        //     nom: proposal.dana_yang_disetujui,
-        //     id: id,
-        //     desc: "Dana telah dikirimkan",
-        //   });
-        //   console.log(check);
-        // }  
+        if (ispaid == 1) {
 
-        // console.log(proposal)
+          let pn = ref
+          if (pn.substring(0, 1) == '0') {
+            pn = "62" + pn.substring(1).trim()
+          } else if (pn.substring(0, 3) == '+62') {
+            pn = "62" + pn.substring(3).trim()
+          }
 
-        const formattedDana = proposal.dana_yang_disetujui.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
+          const formattedDana = proposal.dana_yang_disetujui.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
 
-        const msgId = await sendWhatsapp({
-          wa_number: pn.replace(/[^0-9\.]+/g, ""),
-          text: `Proposal Atas Nama ${nama} telah disetujui dan telah ditransfer pada ${formattedDate} sejumlah ${formattedDana} ke nomor IMKas ${proposal.user.mustahiq.imkas_number} atau Rekening ${proposal.user.mustahiq.bank_number} a.n ${proposal.user.mustahiq.bank_account_name} anda. Terima kasih`,
-        });
+          const msgId = await sendWhatsapp({
+            wa_number: pn.replace(/[^0-9\.]+/g, ""),
+            text: `Proposal Atas Nama ${nama} telah disetujui dan telah ditransfer pada ${formattedDate} sejumlah ${formattedDana} ke nomor IMKas ${proposal.user.mustahiq.imkas_number} atau Rekening ${proposal.user.mustahiq.bank_number} a.n ${proposal.user.mustahiq.bank_account_name} anda. Terima kasih`,
+          });
+        }
       }
-
       return res.status(200).json({
         message: "Sukses",
         data: "Berhasil Ubah Data",

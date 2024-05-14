@@ -5,8 +5,8 @@ const sendImkas = async ({ nom, phone, desc, id }) => {
     const timesg = String(+ new Date);
     const datas = {
         "amount": Number(nom),
-        "customerPhone": phone,
-        "desc": desc,
+        "customerPhone": String(phone),
+        "desc": String(desc),
         "jurnalId": `ID PROPOSAL ${id}`,
         "partnerCode": "ZISWAF",
         "productCode": "Top up - ZISWAF",
@@ -16,9 +16,9 @@ const sendImkas = async ({ nom, phone, desc, id }) => {
     const reqtrim = JSON.stringify(datas).replace(/[^a-zA-Z0-9\,:{}.]+/g, "").toUpperCase() + ':' + timesg;
     var hasreq = CryptoJS.HmacSHA256(reqtrim, serverkey);
     var signHex = CryptoJS.enc.Base64.stringify(hasreq);
-    console.log(timesg);
+    // console.log(timesg);
     try {
-        const response = await ax.post('https://imcash.pactindo.com/api/topup/postingDisbursement',
+        const response = await ax.post('https://imkas.pactindo.com/api/topup/postingDisbursement',
             datas,
             {
                 headers: {
@@ -29,8 +29,8 @@ const sendImkas = async ({ nom, phone, desc, id }) => {
                     'Signature': signHex
                 }
             });
-        console.log('Status:', response.status);
-        console.log('Response:', response.data);
+        console.log(datas);
+        console.log(response);
         return response.data;
     } catch (error) {
         console.error('Error:', error.response.data);
