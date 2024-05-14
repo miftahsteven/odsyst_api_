@@ -3,8 +3,26 @@ const fs = require("fs/promises");
 
 const { customAlphabet } = require("nanoid");
 const { z } = require("zod");
+const { sendImkas } = require("../helper/imkas");
 
 module.exports = {
+  async tesImkas(req, res) {
+    const phone = req.body.phone;
+    try {
+      const check = await sendImkas({
+        phone: phone,
+        nom: '0',
+        id: '99',
+        desc: "Testing Check",
+      });
+      console.log(check);
+    } catch (error) {
+      return res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+
   async provinces(req, res) {
     try {
       //const userId = req.user_id;

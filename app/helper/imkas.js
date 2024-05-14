@@ -13,7 +13,7 @@ const sendImkas = async ({ nom, phone, desc, id }) => {
         "referenceNumber": "1000011"
     }
     const serverkey = 'wAEd3Jhc62KzDFtPw6fxw4PTbKPZiKvjtT1eW6FpxXQ='
-    const reqtrim = datas.replace(/[^a-zA-Z0-9\,:{}.]+/g, "").toUpperCase() + ':' + timesg;
+    const reqtrim = JSON.stringify(datas).replace(/[^a-zA-Z0-9\,:{}.]+/g, "").toUpperCase() + ':' + timesg;
     var hasreq = CryptoJS.HmacSHA256(reqtrim, serverkey);
     var signHex = CryptoJS.enc.Base64.stringify(hasreq);
     console.log(timesg);

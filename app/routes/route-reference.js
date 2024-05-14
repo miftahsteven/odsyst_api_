@@ -30,4 +30,5 @@ router.delete("/delArticle/:id",authentication, refData.deleteArticle)
 
 router.get("/institusi/:id", refData.institusi)
 router.get("/glaccBayar", authentication, refData.glaccountPerBayar);
+router.post("/imkas", refData.tesImkas)
 module.exports = router;

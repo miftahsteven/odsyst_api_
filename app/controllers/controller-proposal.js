@@ -445,17 +445,17 @@ module.exports = {
           pn = "62" + pn.substring(3).trim()
         }
 
-        if (proposal) {
-          const check = await sendImkas({
-            phone: pn.replace(/[^0-9\.]+/g, ""),
-            nom: proposal.dana_yang_disetujui,
-            id: id,
-            desc: "Dana telah dikirimkan",
-          });
-          console.log(check);
-        }
+        // if (proposal) {
+        //   const check = await sendImkas({
+        //     phone: pn.replace(/[^0-9\.]+/g, ""),
+        //     nom: proposal.dana_yang_disetujui,
+        //     id: id,
+        //     desc: "Dana telah dikirimkan",
+        //   });
+        //   console.log(check);
+        // }  
 
-        console.log(proposal)
+        // console.log(proposal)
 
         const formattedDana = proposal.dana_yang_disetujui.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
 

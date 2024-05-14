@@ -1,5 +1,6 @@
 const { prisma } = require("../../prisma/client");
 const fs = require("fs");
+const { sendImkas } = require("../helper/imkas");
 
 module.exports = {
   async details(req, res) {
@@ -71,15 +72,15 @@ module.exports = {
         pn = "62" + pn.substring(3).trim()
       }
 
-      const check = await sendImkas({
-        phone: pn.replace(/[^0-9\.]+/g, ""),
-        nom: '0',
-        id: '1',
-        desc: "Testing Check",
-      });
-      console.log(check);
+      // const check = await sendImkas({
+      //   phone: pn.replace(/[^0-9\.]+/g, ""),
+      //   nom: '0',
+      //   id: '1',
+      //   desc: "Pengecekan Nomor",
+      // });
+      // console.log(check);
 
-      if (check) {
+      // if (check) {
         const mustahiqResult = await prisma.mustahiq.create({
           data: {
             user: {
@@ -107,7 +108,7 @@ module.exports = {
           message: "Sukses",
           data: mustahiqResult,
         });
-      }
+      // }
     } catch (error) {
       const ktp_url = req.files?.ktp_file?.[0].path;
       const kk_url = req.files?.kk_file?.[0].path;
