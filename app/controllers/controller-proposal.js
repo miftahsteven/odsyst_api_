@@ -449,8 +449,8 @@ module.exports = {
           const check = await sendImkas({
             phone: pn.replace(/[^0-9\.]+/g, ""),
             nom: proposal.dana_yang_disetujui,
-            id: '1',
-            desc: "Testing Check",
+            id: id,
+            desc: "Dana telah dikirimkan",
           });
           console.log(check);
         }
