@@ -1,5 +1,6 @@
 const { prisma } = require("../../prisma/client");
 const fs = require("fs");
+const { sendImkas } = require("../helper/imkas");
 
 module.exports = {
   async details(req, res) {
@@ -66,20 +67,25 @@ module.exports = {
 
       let pn = imkas_number
       if (pn.substring(0, 1) == '0') {
-        pn = "62" + pn.substring(1).trim()
+        pn = "0" + pn.substring(1).trim()
       } else if (pn.substring(0, 3) == '+62') {
-        pn = "62" + pn.substring(3).trim()
+        pn = "0" + pn.substring(3).trim()
       }
-
+      console.log(pn)
+      console.log(pn.replace(/[^0-9\.]+/g, ""))
       const check = await sendImkas({
         phone: pn.replace(/[^0-9\.]+/g, ""),
         nom: '0',
         id: '1',
-        desc: "Testing Check",
+        desc: "Pengecekan Nomor",
       });
       console.log(check);
 
-      if (check) {
+      if (check.responseCode != '00') {
+        return res.status(400).json({ message: check.responseDescription });
+      }
+
+      if (check.responseCode == '00') {
         const mustahiqResult = await prisma.mustahiq.create({
           data: {
             user: {
