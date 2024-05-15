@@ -83,17 +83,17 @@ module.exports = {
           data: dataTrans,
         });
 
-        // res.status(200).json({
-        //   message: "Sukses Generate Data MT940",
-        // });
-
-        res.send({
-          success: true,
-          code: 200,
-          data: dataTrans,
-          gen: duplicate,
-          message: "GET DATA SUCCESS",
+        res.status(200).json({
+          message: "Sukses Generate Data MT940",
         });
+
+        // res.send({
+        //   success: true,
+        //   code: 200,
+        //   data: dataTrans,
+        //   gen: duplicate,
+        //   message: "GET DATA SUCCESS",
+        // });
       } else {
         res.status(500).json({
           message: "Ada Duplikasi File"
