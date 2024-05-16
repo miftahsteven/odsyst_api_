@@ -7,16 +7,15 @@ const sendImkas = async ({ nom, phone, desc, id }) => {
         "amount": Number(nom),
         "customerPhone": String(phone),
         "desc": String(desc),
-        "jurnalId": `ID PROPOSAL ${id}`,
-        "partnerCode": "ZISWAF",
+        "jurnalId": "ZISWAF",
+        "partnerCode": String(id),
         "productCode": "Top up - ZISWAF",
-        "referenceNumber": "1000011"
+        "referenceNumber": String(id)
     }
     const serverkey = 'wAEd3Jhc62KzDFtPw6fxw4PTbKPZiKvjtT1eW6FpxXQ='
     const reqtrim = JSON.stringify(datas).replace(/[^a-zA-Z0-9\,:{}.]+/g, "").toUpperCase() + ':' + timesg;
     var hasreq = CryptoJS.HmacSHA256(reqtrim, serverkey);
     var signHex = CryptoJS.enc.Base64.stringify(hasreq);
-    // console.log(timesg);
     try {
         const response = await ax.post('https://imkas.pactindo.com/api/topup/postingDisbursement',
             datas,
