@@ -75,7 +75,7 @@ module.exports = {
       console.log(pn.replace(/[^0-9\.]+/g, ""))
       const check = await sendImkas({
         phone: pn.replace(/[^0-9\.]+/g, ""),
-        nom: '1',
+        nom: '50',
         id: `10${userId}`,
         desc: "Pengecekan Nomor",
       });
