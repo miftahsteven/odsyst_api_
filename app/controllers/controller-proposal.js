@@ -418,9 +418,15 @@ module.exports = {
         imkas = "0" + imkas.substring(3).trim()
       }
 
+      const proposalss = await prisma.proposal.findUnique({
+        where: {
+          id: Number(id),
+        },
+      })
+
       const check = await sendImkas({
         phone: imkas.replace(/[^0-9\.]+/g, ""),
-        nom: proposal.dana_yang_disetujui,
+        nom: proposalss.dana_yang_disetujui,
         id: id,
         desc: "Dana telah dikirimkan",
       });
