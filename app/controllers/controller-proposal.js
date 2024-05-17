@@ -411,7 +411,7 @@ module.exports = {
       const nama = req.body.nama;
       const ref = req.body.ref;
 
-      const imkas = ref
+      let imkas = ref
       if (imkas.substring(0, 1) == '0') {
         imkas = "0" + imkas.substring(1).trim()
       } else if (imkas.substring(0, 3) == '+62') {
