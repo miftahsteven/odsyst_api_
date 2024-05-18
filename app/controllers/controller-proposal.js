@@ -411,19 +411,28 @@ module.exports = {
       const nama = req.body.nama;
       const ref = req.body.ref;
 
-      let imkas = ref
-      if (imkas.substring(0, 1) == '0') {
-        imkas = "0" + imkas.substring(1).trim()
-      } else if (imkas.substring(0, 3) == '+62') {
-        imkas = "0" + imkas.substring(3).trim()
-      }
-
       const proposalss = await prisma.proposal.findUnique({
         where: {
           id: Number(id),
         },
       })
 
+      const userss = await prisma.user.findUnique({
+        where: {
+          id: Number(proposalss.user_id),
+        },
+        include: {
+          mustahiq: true,
+        },
+      })
+
+      let imkas = userss.mustahiq.imkas_number
+      if (imkas.substring(0, 1) == '0') {
+        imkas = "0" + imkas.substring(1).trim()
+      } else if (imkas.substring(0, 3) == '+62') {
+        imkas = "0" + imkas.substring(3).trim()
+      }
+      
       const check = await sendImkas({
         phone: imkas.replace(/[^0-9\.]+/g, ""),
         nom: proposalss.dana_yang_disetujui,
