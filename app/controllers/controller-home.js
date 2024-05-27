@@ -18,12 +18,14 @@ module.exports = {
       const sortBy = req.query.sortBy || "program_id";
       const sortType = req.query.order || "asc";
       const iswakaf = Number(req.query.iswakaf || 0);
+      const isinternal = Number(req.query.isinternal || 0);
 
       const params = {
         program_status: status,
         program_title: {
           contains: keyword,
         },
+        isinternal:isinternal,
         iswakaf: iswakaf,
         ...(category ? { program_category_id: Number(category) } : {}),
       };
