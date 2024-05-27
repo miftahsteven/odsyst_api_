@@ -271,8 +271,6 @@ module.exports = {
         return res.status(400).json({ message: "User ID wajib diisi" });
       } else if (!program_id) {
         return res.status(400).json({ message: "Program ID wajib diisi" });
-      } else if (!proposal_kategori) {
-        return res.status(400).json({ message: "Kategori Proposal wajib diisi" });
       } else if (!no_telp_pemberi_rekomendasi) {
         return res.status(400).json({ message: "Nomor Telepon Pemberi Rekomendasi wajib diisi" });
       }
@@ -431,7 +429,7 @@ module.exports = {
       } else if (imkas.substring(0, 3) == '+62') {
         imkas = "0" + imkas.substring(3).trim()
       }
-      
+
       // const check = await sendImkas({
       //   phone: imkas.replace(/[^0-9\.]+/g, ""),
       //   nom: proposalss.dana_yang_disetujui,
@@ -446,47 +444,47 @@ module.exports = {
 
       // if (check.responseCode == '00') {
 
-        const proposal = await prisma.proposal.update({
-          where: {
-            id: Number(id),
-          },
-          data: {
-            ispaid,
-          },
-          include: {
-            user: {
-              select: {
-                mustahiq: true
-              }
+      const proposal = await prisma.proposal.update({
+        where: {
+          id: Number(id),
+        },
+        data: {
+          ispaid,
+        },
+        include: {
+          user: {
+            select: {
+              mustahiq: true
             }
           }
+        }
+      });
+
+      const currentDate = new Date();
+      const formattedDate = currentDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+
+      if (!proposal) {
+        return res.status(400).json({
+          message: "Proposal tidak ditemukan",
         });
+      }
 
-        const currentDate = new Date();
-        const formattedDate = currentDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+      if (ispaid == 1) {
 
-        if (!proposal) {
-          return res.status(400).json({
-            message: "Proposal tidak ditemukan",
-          });
+        let pn = ref
+        if (pn.substring(0, 1) == '0') {
+          pn = "62" + pn.substring(1).trim()
+        } else if (pn.substring(0, 3) == '+62') {
+          pn = "62" + pn.substring(3).trim()
         }
 
-        if (ispaid == 1) {
+        const formattedDana = proposal.dana_yang_disetujui.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
 
-          let pn = ref
-          if (pn.substring(0, 1) == '0') {
-            pn = "62" + pn.substring(1).trim()
-          } else if (pn.substring(0, 3) == '+62') {
-            pn = "62" + pn.substring(3).trim()
-          }
-
-          const formattedDana = proposal.dana_yang_disetujui.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
-
-          const msgId = await sendWhatsapp({
-            wa_number: pn.replace(/[^0-9\.]+/g, ""),
-            text: `Proposal Atas Nama ${nama} telah disetujui dan telah ditransfer pada ${formattedDate} sejumlah ${formattedDana} ke nomor IMKas ${proposal.user.mustahiq.imkas_number} atau Rekening ${proposal.user.mustahiq.bank_number} a.n ${proposal.user.mustahiq.bank_account_name} anda. Terima kasih`,
-          });
-        }
+        const msgId = await sendWhatsapp({
+          wa_number: pn.replace(/[^0-9\.]+/g, ""),
+          text: `Proposal Atas Nama ${nama} telah disetujui dan telah ditransfer pada ${formattedDate} sejumlah ${formattedDana} ke nomor IMKas ${proposal.user.mustahiq.imkas_number} atau Rekening ${proposal.user.mustahiq.bank_number} a.n ${proposal.user.mustahiq.bank_account_name} anda. Terima kasih`,
+        });
+      }
       // }
       return res.status(200).json({
         message: "Sukses",

@@ -56,6 +56,7 @@ model program {
   kat_penyaluran_id     Int?
   iswakaf               Int?                    @default(0) @db.SmallInt
   program_wakaf_type    Int?                    @default(0)
+  isinternal            Int?                    @default(0) @db.SmallInt
   budget                budget[]
   mitra                 mitra[]
   mitra_register        mitra_register[]
