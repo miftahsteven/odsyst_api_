@@ -37,6 +37,33 @@ const sendImkas = async ({ nom, phone, desc, id }) => {
     }
 };
 
+const checkImkas = async () => {
+    const timesg = String(+ new Date);
+    const datas = {
+        "referenceNumber": String(timesg),
+        // "partnerId": "ZISWAF",
+        // "partnerCode": "ZISWAF"
+    }
+    try {
+        const response = await ax.post('https://imkas.pactindo.com/api/topup/checkDepositBalance',
+            datas,
+            {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Institution-ID': 'IMCASH',
+                    'Timestamp': timesg,
+                    'Authorization': 'Basic WklTV0FG'
+                }
+            });
+        console.log(datas);
+        console.log(response);
+        return response.data;
+    } catch (error) {
+        console.error('Error:', error.response.data);
+        throw error;
+    }
+};
 module.exports = {
     sendImkas,
+    checkImkas
 };
