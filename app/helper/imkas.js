@@ -1,6 +1,6 @@
 const ax = require('axios');
 const CryptoJS = require('crypto-js');
-
+const { format } = require('date-fns');
 const sendImkas = async ({ nom, phone, desc, id }) => {
     const timesg = String(+ new Date);
     const datas = {
@@ -38,7 +38,7 @@ const sendImkas = async ({ nom, phone, desc, id }) => {
 };
 
 const checkImkas = async () => {
-    const timesg = String(+ new Date);
+    const timesg = format(new Date(), 'yyyMMdd');
     const datas = {
         // "referenceNumber": String(timesg),
         "partnerId": "ZISWAF",
