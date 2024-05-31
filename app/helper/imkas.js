@@ -40,9 +40,9 @@ const sendImkas = async ({ nom, phone, desc, id }) => {
 const checkImkas = async () => {
     const timesg = String(+ new Date);
     const datas = {
-        "referenceNumber": String(timesg),
-        // "partnerId": "ZISWAF",
-        // "partnerCode": "ZISWAF"
+        // "referenceNumber": String(timesg),
+        "partnerId": "ZISWAF",
+        "partnerCode": "ZISWAF"
     }
     try {
         const response = await ax.post('https://imkas.pactindo.com/api/topup/checkDepositBalance',
