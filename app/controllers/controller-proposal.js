@@ -430,19 +430,19 @@ module.exports = {
         imkas = "0" + imkas.substring(3).trim()
       }
 
-      // const check = await sendImkas({
-      //   phone: imkas.replace(/[^0-9\.]+/g, ""),
-      //   nom: proposalss.dana_yang_disetujui,
-      //   id: id,
-      //   desc: "Dana telah dikirimkan",
-      // });
-      // console.log(check);
+      const check = await sendImkas({
+        phone: imkas.replace(/[^0-9\.]+/g, ""),
+        nom: proposalss.dana_yang_disetujui,
+        id: id,
+        desc: "Dana telah dikirimkan",
+      });
+      console.log(check);
 
-      // if (check.responseCode != '00') {
-      //   return res.status(400).json({ message: check.responseDescription });
-      // }
+      if (check.responseCode != '00') {
+        return res.status(400).json({ message: check.responseDescription });
+      }
 
-      // if (check.responseCode == '00') {
+      if (check.responseCode == '00') {
 
       const proposal = await prisma.proposal.update({
         where: {
@@ -485,7 +485,7 @@ module.exports = {
           text: `Proposal Atas Nama ${nama} telah disetujui dan telah ditransfer pada ${formattedDate} sejumlah ${formattedDana} ke nomor IMKas ${proposal.user.mustahiq.imkas_number} atau Rekening ${proposal.user.mustahiq.bank_number} a.n ${proposal.user.mustahiq.bank_account_name} anda. Terima kasih`,
         });
       }
-      // }
+      }
       return res.status(200).json({
         message: "Sukses",
         data: "Berhasil Ubah Data",
