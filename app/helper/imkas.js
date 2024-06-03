@@ -38,12 +38,16 @@ const sendImkas = async ({ nom, phone, desc, id }) => {
 };
 
 const checkImkas = async () => {
-    const timesg = format(new Date(), 'yyyMMdd');
+    const timesgs = format(new Date(), 'yyyyMMdd');
+    const timesg = String(+ new Date);
     const datas = {
-        // "referenceNumber": String(timesg),
         "partnerId": "ZISWAF",
         "partnerCode": "ZISWAF"
     }
+    const serverkey = 'wAEd3Jhc62KzDFtPw6fxw4PTbKPZiKvjtT1eW6FpxXQ='
+    const reqtrim = JSON.stringify(datas).replace(/[^a-zA-Z0-9\,:{}.]+/g, "").toUpperCase() + ':' + timesg;
+    var hasreq = CryptoJS.HmacSHA256(reqtrim, serverkey);
+    var signHex = CryptoJS.enc.Base64.stringify(hasreq);
     try {
         const response = await ax.post('https://imkas.pactindo.com/api/topup/checkDepositBalance',
             datas,
@@ -51,8 +55,9 @@ const checkImkas = async () => {
                 headers: {
                     'Content-Type': 'application/json',
                     'Institution-ID': 'IMCASH',
-                    'Timestamp': timesg,
-                    'Authorization': 'Basic WklTV0FG'
+                    'Timestamp': timesgs,
+                    'Authorization': 'Basic WklTV0FG',
+                    'Signature': signHex
                 }
             });
         console.log(datas);
