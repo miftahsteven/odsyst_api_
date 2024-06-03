@@ -38,8 +38,8 @@ const sendImkas = async ({ nom, phone, desc, id }) => {
 };
 
 const checkImkas = async () => {
-    const timesgs = format(new Date(), 'yyyyMMdd');
-    const timesg = String(+ new Date);
+    const timesg = format(new Date(), 'yyyyMMdd');
+    // const timesg = String(+ new Date);
     const datas = {
         "partnerId": "ZISWAF",
         "partnerCode": "ZISWAF"
@@ -55,12 +55,12 @@ const checkImkas = async () => {
                 headers: {
                     'Content-Type': 'application/json',
                     'Institution-ID': 'IMCASH',
-                    'Timestamp': timesgs,
+                    'Timestamp': timesg,
                     'Authorization': 'Basic WklTV0FG',
                     'Signature': signHex
                 }
             });
-        console.log(datas);
+        // console.log(datas);
         console.log(response);
         return response.data;
     } catch (error) {

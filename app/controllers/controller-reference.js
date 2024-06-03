@@ -9,7 +9,10 @@ module.exports = {
   async checkImkas(req, res) {
     try {
       const check = await checkImkas();
-      console.log(check);
+      return res.status(200).json({
+        message: "Sukses",
+        data: check,
+      });
     } catch (error) {
       return res.status(500).json({
         message: error?.message,
