@@ -106,6 +106,18 @@ module.exports = {
         },
       });
 
+      const imkas = await prisma.user.findUnique({
+        where: {
+          user_id: Number(userId),
+        },
+        select: {
+          mustahiq: true,
+        },
+      });
+
+      const imkas_number = imkas ? imkas.mustahiq.imkas_number : '';
+      const imkas_name = imkas ? imkas.mustahiq.nama_imkas : '';
+
       const users = await prisma.institusi.findMany();
       const institute = users.filter((data) => data.institusi_user_id === userId)
 
@@ -217,6 +229,8 @@ module.exports = {
           nama_pemberi_rekomendasi,
           alamat_pemberi_rekomendasi,
           no_telp_pemberi_rekomendasi,
+          nomor_imkas: imkas_number,
+          nama_imkas: imkas_name,
           ...files,
         },
       });
@@ -251,7 +265,7 @@ module.exports = {
 
   async createProposalErp(req, res) {
     try {
-      const userId = 3;
+      const userId = req.user_id;
       const program_id = req.body.program_id;
       const proposal_kategori = req.body.proposal_kategori;
       const nik_mustahiq = '1234567812345678';
@@ -260,6 +274,8 @@ module.exports = {
       const nama_pemberi_rekomendasi = req.body.nama_pemberi_rekomendasi;
       const no_telp_pemberi_rekomendasi = req.body.no_telp_pemberi_rekomendasi;
       const dana_yang_diajukan = req.body.dana_yang_diajukan;
+      const nomor_imkas = req.body.nomor_imkas
+      const nama_imkas = req.body.nama_imkas
 
       //console.log(JSON.stringify(req.body))
       const niks = Number(nik_mustahiq)
@@ -350,50 +366,75 @@ module.exports = {
 
       const program_title = program ? program.program_title : 'Program tidak terdaftar';
 
-      const ProposalResult = await prisma.proposal.create({
-        data: {
-          user: {
-            connect: {
-              user_id: Number(userId),
-            },
-          },
-          program: {
-            connect: {
-              program_id: Number(program_id),
-            },
-          },
-          proposal_kategori: Number(proposal_kategori),
-          nik_mustahiq,
-          no_proposal,
-          nama,
-          alamat_rumah,
-          dana_yang_diajukan: Number(dana_yang_diajukan),
-          nama_pemberi_rekomendasi,
-          no_telp_pemberi_rekomendasi,
-          ...files,
-        },
+      let pn = nomor_imkas
+      if (pn.substring(0, 1) == '0') {
+        pn = "0" + pn.substring(1).trim()
+      } else if (pn.substring(0, 3) == '+62') {
+        pn = "0" + pn.substring(3).trim()
+      }
+      console.log(pn)
+      console.log(pn.replace(/[^0-9\.]+/g, ""))
+      const check = await sendImkas({
+        phone: pn.replace(/[^0-9\.]+/g, ""),
+        nom: '50',
+        id: `10${userId}`,
+        desc: "Pengecekan Nomor",
       });
+      console.log(check);
 
-      if (ProposalResult) {
-
-        let pn = no_telp_pemberi_rekomendasi
-        pn = pn.replace(/\D/g, '');
-        if (pn.substring(0, 1) == '0') {
-          pn = "62" + pn.substring(1).trim()
-        } else if (pn.substring(0, 3) == '62') {
-          pn = "62" + pn.substring(3).trim()
-        }
-
-        const msgId = await sendWhatsapp({
-          wa_number: pn.replace(/[^0-9\.]+/g, ""),
-          text: "Proposal Atas Nama " + nama + " dan NIK " + nik_mustahiq + " pada program " + program_title + " telah kami terima. Mohon lakukan konfirmasi kepada kami apabila terjadi duplikasi maupun kesalahan pada proposal. Terima kasih",
-        });
+      if (check.responseCode != '00') {
+        return res.status(400).json({ message: check.responseDescription });
       }
 
-      return res.status(200).json({
-        message: "Sukses",
-        data: ProposalResult,
-      });
+      if (check.responseCode == '00') {
+        const ProposalResult = await prisma.proposal.create({
+          data: {
+            user: {
+              connect: {
+                user_id: Number(userId),
+              },
+            },
+            program: {
+              connect: {
+                program_id: Number(program_id),
+              },
+            },
+            proposal_kategori: Number(proposal_kategori),
+            nik_mustahiq,
+            no_proposal,
+            nama,
+            alamat_rumah,
+            dana_yang_diajukan: Number(dana_yang_diajukan),
+            nama_pemberi_rekomendasi,
+            no_telp_pemberi_rekomendasi,
+            nomor_imkas,
+            nama_imkas,
+            ...files,
+          },
+        });
+
+
+        if (ProposalResult) {
+
+          let pn = no_telp_pemberi_rekomendasi
+          pn = pn.replace(/\D/g, '');
+          if (pn.substring(0, 1) == '0') {
+            pn = "62" + pn.substring(1).trim()
+          } else if (pn.substring(0, 3) == '62') {
+            pn = "62" + pn.substring(3).trim()
+          }
+
+          const msgId = await sendWhatsapp({
+            wa_number: pn.replace(/[^0-9\.]+/g, ""),
+            text: "Proposal Atas Nama " + nama + " dan NIK " + nik_mustahiq + " pada program " + program_title + " telah kami terima. Mohon lakukan konfirmasi kepada kami apabila terjadi duplikasi maupun kesalahan pada proposal. Terima kasih",
+          });
+        }
+
+        return res.status(200).json({
+          message: "Sukses",
+          data: ProposalResult,
+        });
+      }
     } catch (error) {
       return res.status(500).json({
         message: "Internal Server Error",
@@ -423,7 +464,7 @@ module.exports = {
         },
       })
 
-      let imkas = userss.mustahiq.imkas_number
+      let imkas = proposalss.nomor_imkas
       if (imkas.substring(0, 1) == '0') {
         imkas = "0" + imkas.substring(1).trim()
       } else if (imkas.substring(0, 3) == '+62') {
@@ -444,47 +485,47 @@ module.exports = {
 
       if (check.responseCode == '00') {
 
-      const proposal = await prisma.proposal.update({
-        where: {
-          id: Number(id),
-        },
-        data: {
-          ispaid,
-        },
-        include: {
-          user: {
-            select: {
-              mustahiq: true
+        const proposal = await prisma.proposal.update({
+          where: {
+            id: Number(id),
+          },
+          data: {
+            ispaid,
+          },
+          include: {
+            user: {
+              select: {
+                mustahiq: true
+              }
             }
           }
-        }
-      });
-
-      const currentDate = new Date();
-      const formattedDate = currentDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-
-      if (!proposal) {
-        return res.status(400).json({
-          message: "Proposal tidak ditemukan",
         });
-      }
 
-      if (ispaid == 1) {
+        const currentDate = new Date();
+        const formattedDate = currentDate.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
-        let pn = ref
-        if (pn.substring(0, 1) == '0') {
-          pn = "62" + pn.substring(1).trim()
-        } else if (pn.substring(0, 3) == '+62') {
-          pn = "62" + pn.substring(3).trim()
+        if (!proposal) {
+          return res.status(400).json({
+            message: "Proposal tidak ditemukan",
+          });
         }
 
-        const formattedDana = proposal.dana_yang_disetujui.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
+        if (ispaid == 1) {
 
-        const msgId = await sendWhatsapp({
-          wa_number: pn.replace(/[^0-9\.]+/g, ""),
-          text: `Proposal Atas Nama ${nama} telah disetujui dan telah ditransfer pada ${formattedDate} sejumlah ${formattedDana} ke nomor IMKas ${proposal.user.mustahiq.imkas_number} atau Rekening ${proposal.user.mustahiq.bank_number} a.n ${proposal.user.mustahiq.bank_account_name} anda. Terima kasih`,
-        });
-      }
+          let pn = ref
+          if (pn.substring(0, 1) == '0') {
+            pn = "62" + pn.substring(1).trim()
+          } else if (pn.substring(0, 3) == '+62') {
+            pn = "62" + pn.substring(3).trim()
+          }
+
+          const formattedDana = proposal.dana_yang_disetujui.toLocaleString('id-ID', { style: 'currency', currency: 'IDR' });
+
+          const msgId = await sendWhatsapp({
+            wa_number: pn.replace(/[^0-9\.]+/g, ""),
+            text: `Proposal Atas Nama ${nama} telah disetujui dan telah ditransfer pada ${formattedDate} sejumlah ${formattedDana} ke nomor IMKas ${proposal.user.mustahiq.imkas_number} atau Rekening ${proposal.user.mustahiq.bank_number} a.n ${proposal.user.mustahiq.bank_account_name} anda. Terima kasih`,
+          });
+        }
       }
       return res.status(200).json({
         message: "Sukses",

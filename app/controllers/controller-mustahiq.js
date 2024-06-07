@@ -156,6 +156,18 @@ module.exports = {
           where: params,
           include: {
             user: true,
+
+            program: {
+              select: {
+                program_title: true,
+                pogram_target_amount: false,
+                kategori_penyaluran: true,
+                program_category: true,
+              },
+              // include: {
+
+              // }
+            },
             proposal_approval: {
               include: {
                 user: {
