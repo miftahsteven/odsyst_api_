@@ -873,7 +873,7 @@ module.exports = {
 
 
       //cekdata = await prisma.$queryRaw`select pa.mitra_id as id from mitra_approval pa JOIN user u on pa.user_id = u.user_id where u.user_type in (14) and pa.mitra_id is not NULL GROUP BY pa.mitra_id`
-      cekdata = await prisma.$queryRaw`select pa.mitra_id as id from mitra_approval pa JOIN user u on pa.user_id = u.user_id where pa.mitra_id is not NULL GROUP BY pa.mitra_id`
+      cekdata = await prisma.$queryRaw`SELECT pa.mitra_id AS id FROM mitra_approval pa JOIN user u ON pa.user_id = u.user_id AND pa.mitra_id IS NOT NULL`
       //const cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa JOIN user u on pa.user_id = u.user_id where u.user_type in (14) and pa.proposal_id is not NULL GROUP BY pa.proposal_id` 
 
       cekdata.map(item => {
@@ -888,7 +888,7 @@ module.exports = {
           mitra_nama: { contains: keyword },
           approved: 0,
           status_bayar: 0,
-          id: { notIn: arrId }
+          id: { in: arrId }
         }]
       };
 
@@ -1054,10 +1054,11 @@ module.exports = {
       let arrId = []
 
       //const cekdata = await prisma.$queryRaw`select pa.proposal_id as id from proposal_approval pa where (select count(b.id) from proposal_approval b where pa.proposal_id = b.proposal_id) < 5 and pa.user_id in (${userId}) GROUP BY pa.proposal_id`
-      const cekdata = await prisma.$queryRaw`select p.id as id, count(pa.id) as jumlah  FROM mitra p
+      const cekdata = await prisma.$queryRaw`select p.id as id, count(pa.id) as jumlah FROM mitra p
       JOIN  mitra_approval pa ON pa.mitra_id = p.id 
       JOIN user u ON pa.user_id = u.user_id 
-      WHERE (pa.user_id = ${userId} OR u.user_type = 14)  GROUP by pa.id HAVING COUNT(p.id) < 4`
+      WHERE (u.user_type = 14) 
+      GROUP by pa.id HAVING COUNT(p.id) < 4`
 
       //const cekdata = await prisma.$queryRaw`select p.proposal_id as id, p.user_id  from proposal_approval p where p.proposal_id is not null having p.user_id != ${userId} order by p.proposal_id`
 
