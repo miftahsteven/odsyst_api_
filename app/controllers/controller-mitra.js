@@ -888,7 +888,7 @@ module.exports = {
           mitra_nama: { contains: keyword },
           approved: 0,
           status_bayar: 0,
-          id: { in: arrId }
+          // id: { in: arrId }
         }]
       };
 
