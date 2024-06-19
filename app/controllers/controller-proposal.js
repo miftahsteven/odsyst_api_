@@ -449,6 +449,7 @@ module.exports = {
       const ispaid = req.body.ispaid;
       const nama = req.body.nama;
       const ref = req.body.ref;
+      const tgl_bayar = new Date()
 
       const proposalss = await prisma.proposal.findUnique({
         where: {
@@ -491,6 +492,7 @@ module.exports = {
           },
           data: {
             ispaid,
+            tgl_bayar
           },
           include: {
             user: {
@@ -1323,7 +1325,7 @@ module.exports = {
       const keyword = req.query.nama || "";
       const user_type = req.query.user_type || "";
       const category = req.query.category || "";
-      const sortBy = req.query.sortBy || "create_date";
+      const sortBy = req.query.sortBy || "tgl_bayar";
       const sortType = req.query.order || "desc";
 
       const params = {
