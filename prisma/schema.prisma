@@ -508,6 +508,7 @@ model proposal {
   approver_count              Int?                 @default(0) @db.SmallInt
   nomor_imkas                 String?              @db.VarChar(50)
   nama_imkas                  String?              @db.VarChar(255)
+  tgl_bayar                   DateTime?            @db.DateTime(0)
   jurnal                      jurnal[]
   user                        user?                @relation(fields: [user_id], references: [user_id], onDelete: Restrict, onUpdate: Restrict, map: "proposal_FK")
   program                     program?             @relation(fields: [program_id], references: [program_id], onUpdate: SetNull, map: "proposal_FK_1")
