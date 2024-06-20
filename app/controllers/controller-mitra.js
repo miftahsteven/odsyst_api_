@@ -1207,5 +1207,29 @@ module.exports = {
     }
   },
 
+  async updateApproved(req, res) {
+    try {
+      const id = req.params.id;
+      const { approved, dana_approval } = req.body;
 
+      await prisma.mitra.update({
+        where: {
+          id: Number(id),
+        },
+        data: {
+          approved: Number(approved),
+          dana_approval : Number(dana_approval)
+        },
+      });
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: "Berhasil Update Data",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
 };

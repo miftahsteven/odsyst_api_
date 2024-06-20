@@ -19,6 +19,7 @@ router.get("/all-process", authentication, mitra.getAllProcessMitraProposal);
 router.post("/approved", authentication, mitra.approvalProposal);
 router.get("/all-approver", authentication, mitra.getAllApproverMitraProposal);
 router.put("/update/:id", authentication, mitra.updateStatusMitra);
+router.put("/updateApproved/:id", authentication, mitra.updateApproved);
 router.post("/update-profile-erp", authentication, mitra.createErp); 
 router.post("/register-erp", authentication, upload.single("proposal") , mitra.createMitraRegErp); 
 
