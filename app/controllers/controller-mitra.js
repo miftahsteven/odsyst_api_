@@ -1210,7 +1210,7 @@ module.exports = {
   async updateApproved(req, res) {
     try {
       const id = req.params.id;
-      const { approved, dana_approval } = req.body;
+      const { approved, dana_approval, status_bayar, dana_final_disetujui } = req.body;
 
       await prisma.mitra.update({
         where: {
@@ -1218,7 +1218,9 @@ module.exports = {
         },
         data: {
           approved: Number(approved),
-          dana_approval : Number(dana_approval)
+          dana_approval : Number(dana_approval),
+          dana_final_disetujui : Number(dana_final_disetujui),
+          status_bayar: Number(status_bayar)
         },
       });
 
