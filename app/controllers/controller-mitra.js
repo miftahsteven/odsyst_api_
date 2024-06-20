@@ -1207,5 +1207,54 @@ module.exports = {
     }
   },
 
+  async updateApproved(req, res) {
+    try {
+      const id = req.params.id;
+      const { approved, dana_approval, status_bayar, dana_final_disetujui, all_notes } = req.body;
 
+      const existingProposal = await prisma.proposal.findUnique({
+        where: {
+          id: Number(id),
+        },
+        select: {
+          all_notes: true,
+        },
+      });
+
+      if (!existingProposal) {
+        return res.status(404).json({
+          message: "Proposal not found",
+        });
+      }
+
+      let updatedNotes = ""
+      if (existingProposal.all_notes === null) {
+        updatedNotes = all_notes
+      } else {
+        updatedNotes = `${existingProposal.all_notes}; ${all_notes}`;
+      }
+
+      await prisma.mitra.update({
+        where: {
+          id: Number(id),
+        },
+        data: {
+          approved: Number(approved),
+          dana_approval : Number(dana_approval),
+          dana_final_disetujui : Number(dana_final_disetujui),
+          status_bayar: Number(status_bayar),
+          all_notes: updatedNotes
+        },
+      });
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: "Berhasil Update Data",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
 };
