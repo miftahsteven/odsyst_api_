@@ -1212,7 +1212,7 @@ module.exports = {
       const id = req.params.id;
       const { approved, dana_approval, status_bayar, dana_final_disetujui, all_notes } = req.body;
 
-      const existingProposal = await prisma.proposal.findUnique({
+      const existingMitra = await prisma.mitra.findUnique({
         where: {
           id: Number(id),
         },
@@ -1221,17 +1221,17 @@ module.exports = {
         },
       });
 
-      if (!existingProposal) {
+      if (!existingMitra) {
         return res.status(404).json({
           message: "Proposal not found",
         });
       }
 
       let updatedNotes = ""
-      if (existingProposal.all_notes === null) {
+      if (existingMitra.all_notes === null) {
         updatedNotes = all_notes
       } else {
-        updatedNotes = `${existingProposal.all_notes}; ${all_notes}`;
+        updatedNotes = `${existingMitra.all_notes}; ${all_notes}`;
       }
 
       await prisma.mitra.update({
