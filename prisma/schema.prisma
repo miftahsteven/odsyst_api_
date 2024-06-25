@@ -903,6 +903,7 @@ model mitra {
   mitra_no_kontrak           String?                @db.VarChar(16)
   mitra_program_id           Int?
   created_date               DateTime?              @default(now()) @db.Timestamp(0)
+  all_notes                  String?                @db.Text
   cities                     cities?                @relation(fields: [mitra_city_id], references: [city_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_cities_FK")
   program                    program?               @relation(fields: [mitra_program_id], references: [program_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_program_FK")
   provinces                  provinces?             @relation(fields: [mitra_prov_id], references: [prov_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_provinces_FK")
