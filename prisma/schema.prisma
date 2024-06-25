@@ -508,7 +508,7 @@ model proposal {
   approver_count              Int?                 @default(0) @db.SmallInt
   nomor_imkas                 String?              @db.VarChar(50)
   nama_imkas                  String?              @db.VarChar(255)
-  tgl_bayar                   DateTime?            @db.Date
+  tgl_bayar                   DateTime?            @db.DateTime(0)
   jurnal                      jurnal[]
   user                        user?                @relation(fields: [user_id], references: [user_id], onDelete: Restrict, onUpdate: Restrict, map: "proposal_FK")
   program                     program?             @relation(fields: [program_id], references: [program_id], onUpdate: SetNull, map: "proposal_FK_1")
@@ -903,6 +903,7 @@ model mitra {
   mitra_no_kontrak           String?                @db.VarChar(16)
   mitra_program_id           Int?
   created_date               DateTime?              @default(now()) @db.Timestamp(0)
+  all_notes                  String?                @db.Text
   cities                     cities?                @relation(fields: [mitra_city_id], references: [city_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_cities_FK")
   program                    program?               @relation(fields: [mitra_program_id], references: [program_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_program_FK")
   provinces                  provinces?             @relation(fields: [mitra_prov_id], references: [prov_id], onDelete: NoAction, onUpdate: NoAction, map: "mitra_provinces_FK")
