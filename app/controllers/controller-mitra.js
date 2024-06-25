@@ -1267,7 +1267,7 @@ module.exports = {
       const sortBy = req.query.sortBy || "id";
       const sortType = req.query.order || "asc";
       const params = {
-        mitra_penarikan_dana: 1,
+        status_request_penarikan: 1,
         status_bayar: 0,
       };
 
@@ -1293,11 +1293,11 @@ module.exports = {
                 }
               }
             },
-            dana_final_disetujui: true,
-            mitra_bank: true,
-            mitra_no_rekening: true,
-            mitra_nama_rekening: true,
-            mitra_penarikan_dana: true,
+            // dana_final_disetujui: true,
+            // mitra_bank: true,
+            // mitra_no_rekening: true,
+            // mitra_nama_rekening: true,
+            // mitra_penarikan_dana: true,
           },
           skip,
         }),
