@@ -1240,8 +1240,8 @@ module.exports = {
         },
         data: {
           approved: Number(approved),
-          dana_approval : Number(dana_approval),
-          dana_final_disetujui : Number(dana_final_disetujui),
+          dana_approval: Number(dana_approval),
+          dana_final_disetujui: Number(dana_final_disetujui),
           status_bayar: Number(status_bayar),
           all_notes: updatedNotes
         },
@@ -1257,4 +1257,62 @@ module.exports = {
       });
     }
   },
+
+  async getMitraTarikDana(req, res) {
+    try {
+      const page = Number(req.query.page || 1);
+      const perPage = Number(req.query.perPage || 10);
+      const skip = (page - 1) * perPage;
+      const keyword = req.query.keyword || "";
+      const sortBy = req.query.sortBy || "id";
+      const sortType = req.query.order || "asc";
+      const params = {
+        mitra_penarikan_dana: 1,
+        status_bayar: 0,
+      };
+
+      const [count, detailmitra] = await prisma.$transaction([
+        prisma.mitra.count({
+          where: params,
+        }),
+        prisma.mitra.findMany({
+          orderBy: {
+            [sortBy]: sortType,
+          },
+          where: params,
+          include: {
+            user: true,
+            mitra_register: {
+              include: {
+                program: {
+                  select: {
+                    program_title: true,
+                    program_banner: true,
+                    kategori_penyaluran: true
+                  },
+                }
+              }
+            },
+            dana_final_disetujui: true,
+            mitra_bank: true,
+            mitra_no_rekening: true,
+            mitra_nama_rekening: true,
+            mitra_penarikan_dana: true,
+          },
+          skip,
+        }),
+      ]);
+
+      res.status(200).json({
+        message: "Sukses Ambil Data Detail Waqif",
+
+        data: detailmitra,
+      });
+    } catch (error) {
+      res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+  
 };
