@@ -16,57 +16,22 @@ app.use(bodyParser.json({ limit: "50mb", extended: true }));
 
 
 const appRoute = require("./app/routes/route-auth");
-const homeRoute = require("./app/routes/route-home");
-const userRoute = require("./app/routes/route-account");
-const mustahiqRoute = require("./app/routes/route-mustahiq");
-const bankRoute = require("./app/routes/route-bank");
-const proposalRoute = require("./app/routes/route-proposal");
-const jurnal = require("./app/routes/route-jurnal");
-const ptcash = require("./app/routes/route-pettycash");
-const budget = require("./app/routes/route-budget");
-const refRoute = require("./app/routes/route-reference");
-const transactionRoute = require("./app/routes/transaction");
 
-const erpAuthRoute = require("./app/routes/route-erp-auth");
-const erpProgramRoute = require("./app/routes/route-erp-program");
-
-//wakaf
-const waqifRoute = require("./app/routes/route-waqif");
-const mitraRoute = require("./app/routes/route-mitra");
-
-console.log(path.join(__dirname, "uploads"));
 
 app.use("/public/uploads", express.static(path.join(__dirname, "uploads/")));
 
 app.use(
   cors({
-    origin: ["https://portal.zisindosat.id", "http://localhost:3000", "http://localhost:5173", "https://myerp.zisindosat.id"],
+    origin: ["https://odsyst.mscode.id", "http://localhost:3000"],
   })
 );
 app.use("/auth", appRoute);
-app.use("/home", homeRoute);
-app.use("/user", userRoute);
-app.use("/mustahiq", mustahiqRoute);
-app.use("/bank", bankRoute);
-app.use("/ref", refRoute);
-app.use("/proposal", proposalRoute);
-app.use("/jurnal", jurnal);
-app.use("/ptcash", ptcash);
-app.use("/budget", budget);
-app.use("/transaction", transactionRoute);
 
-//ERP
-app.use("/erpauth", erpAuthRoute);
-app.use("/erpprogram", erpProgramRoute);
-
-//Wakaf
-app.use("/wakaf", waqifRoute);
-app.use("/mitra", mitraRoute);
 
 app.get("/", (req, res) => {
-  res.send("Selamat Datang Di Portal ZISWAF Indosat");
+  res.send("Selamat Datang Di ODSYSY");
 });
 
 app.listen(3034, () => {
-  console.log("Server Berjalan di Port : 4800");
+  console.log("Server Berjalan di Port : 3034");
 });

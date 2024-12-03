@@ -1,9 +1,9 @@
 module.exports = {
-  host: "149.129.225.79",
-  user: "userziswaf",
-  password: "Zis321@@",
-  database: "ziswafApp",
-  port: "234",
+  host: "localhost",
+  user: "steven",
+  password: "b47054ii",
+  database: "odsyst",
+  port: "3306",
   pool: {
     max: 5,
     min: 0,

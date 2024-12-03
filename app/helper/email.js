@@ -4,13 +4,13 @@ const sendEmail = async ({ email, html, subject }) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "admin@zisindosat.id",
-      pass: "ziswaf2019",
+      user: "miftahsteven@gmail.com",
+      pass: "igxouxbnyrdstocy",
     },
   });
 
   const info = await transporter.sendMail({
-    from: "admin@zisindosat.id",
+    from: "myinfo@gmai.com",
     to: email,
     subject,
     html: html,
@@ -23,11 +23,11 @@ const sendEmail = async ({ email, html, subject }) => {
 
 const generateTemplate = ({ email, password }) => {
   const encodedEmail = Buffer.from(email).toString("base64");
-  const url = `https://portal.zisindosat.id/verifikasi?akun=${encodedEmail}`;
+  const url = `https://localhost:3034/verifikasi?akun=${encodedEmail}`;
 
   const content = `
   <p>Assalamu'alaikum, Wr Wb.</p>
-  <p>Terima Kasih Telah Mendaftar Ke Ziswaf INDOSAT.</p>
+  <p>Kami telah melakukan registrasi anda di sistem kami</p>
   <p>Berikut ini adalah detail login anda :</p>
   <p>Username: ${email}</p>
   <p>Password: ${password}</p>

@@ -1,8 +1,7 @@
 const { verify } = require("../app/helper/auth-jwt");
 const ApiError = require("../app/helper/api-error");
 const { JsonWebTokenError, TokenExpiredError } = require("jsonwebtoken");
-const { deleteBank } = require("../app/controllers/controller-pettycash");
-const { prisma } = require("../prisma/client");
+//const { prisma } = require("../prisma/client");
 
 const authentication = async (req, res, next) => {
   try {
