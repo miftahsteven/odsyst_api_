@@ -16,6 +16,8 @@ app.use(bodyParser.json({ limit: "50mb", extended: true }));
 
 
 const appRoute = require("./app/routes/route-auth");
+const appEmployee = require("./app/routes/route-employee");
+const appRole = require("./app/routes/route-role");
 
 
 app.use("/public/uploads", express.static(path.join(__dirname, "uploads/")));
@@ -26,6 +28,8 @@ app.use(
   })
 );
 app.use("/auth", appRoute);
+app.use("/emp", appEmployee);
+app.use("/role", appRole);
 
 
 app.get("/", (req, res) => {

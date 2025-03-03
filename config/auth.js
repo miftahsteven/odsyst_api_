@@ -1,31 +1,34 @@
 const { verify } = require("../app/helper/auth-jwt");
 const ApiError = require("../app/helper/api-error");
 const { JsonWebTokenError, TokenExpiredError } = require("jsonwebtoken");
-//const { prisma } = require("../prisma/client");
+const { prisma } = require("../prisma/client");
 
 const authentication = async (req, res, next) => {
   try {
     const headerToken = req.headers.authorization;
+
     if (headerToken) {
       const token = headerToken.split(" ")[1];
       const payload = verify(token);
-      //console.log("+++++++", token);
+      console.log("+++++++TOKEN", JSON.stringify(token));
       req.user = payload;
-      req.user_id = payload.user_id;
+      req.user_id = payload.id;
       //const {id} = req.user;
-      const user = await prisma.user.findFirst({
-        where : {user_token: token, user_status:1}
+      const user = await prisma.users.findFirst({
+        where : {user_token: token, id: payload.id, user_status:1}        
       })
 
-      //console.log("+++++++", JSON.stringify(user));
+      //const user = {};
+
+      console.log("+++++++", JSON.stringify(user));
 
       if(user){
         return next();
       }else{
         return res.status(401).send({
           success: false,
-          code: 101,
-          message: "ERROR : LOGIN EXPIRED",
+          code: 401,
+          message: "Login Problem: System Detect You're Login in other device, Please Re-Login",
         });
       }
     }
@@ -36,9 +39,9 @@ const authentication = async (req, res, next) => {
     // });
   } catch (error) {
     if (error instanceof TokenExpiredError) {
-      return res.status(401).send({
+      return res.status(400).send({
         success: false,
-        code: 101,
+        code: 400,
         message: "ERROR : LOGIN EXPIRED",
       });
     }

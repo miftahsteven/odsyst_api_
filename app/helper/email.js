@@ -4,13 +4,13 @@ const sendEmail = async ({ email, html, subject }) => {
   const transporter = nodemailer.createTransport({
     service: "gmail",
     auth: {
-      user: "miftahsteven@gmail.com",
-      pass: "igxouxbnyrdstocy",
+      user: "miftah.syarief@mscode.id",
+      pass: "redmzoqnewwxmthy",
     },
   });
 
   const info = await transporter.sendMail({
-    from: "myinfo@gmai.com",
+    from: "odsyst@mscode.id",
     to: email,
     subject,
     html: html,
@@ -23,21 +23,20 @@ const sendEmail = async ({ email, html, subject }) => {
 
 const generateTemplate = ({ email, password }) => {
   const encodedEmail = Buffer.from(email).toString("base64");
-  const url = `https://localhost:3034/verifikasi?akun=${encodedEmail}`;
+  const url = `https://localhost:3000/auth/login?akun=${encodedEmail}`;
 
   const content = `
-  <p>Assalamu'alaikum, Wr Wb.</p>
-  <p>Kami telah melakukan registrasi anda di sistem kami</p>
-  <p>Berikut ini adalah detail login anda :</p>
+  <p>Selamat.</p>
+  <p>Kamu telah melakukan registrasi di sistem OD-SYS</p>
+  <p>Berikut ini adalah detail login kamu :</p>
   <p>Username: ${email}</p>
   <p>Password: ${password}</p>
-  <p>Untuk melanjutkan proses registrasi dan agar anda bisa melakukan login, silahkan lakukan Verifikasi terlebih
-     dahulu, dengan melakukan klik pada link berikut</p>
+  <p>Silahkan lakukan login pada sistem dengan password yang kami kirimkan tersebut.</p>
   <br />
-  <a href="${url}"><strong>VERIFIKASI AKUN</strong></a>
+  <a href="${url}"><strong>LOGIN</strong></a>
   <br />
   <p>Terima kasih atas partisipasi anda.</p>
-  <p>Wassalamu'alaikum Wr, Wb</p>
+  <p>Tetap semangat</p>
 `;
 
   return content;
@@ -45,10 +44,10 @@ const generateTemplate = ({ email, password }) => {
 
 const generateTemplateForgotEmail = ({ email, token }) => {
   const encodedEmail = Buffer.from(email).toString("base64");
-  const url = `https://portal.zisindosat.id/reset-password?akun=${encodedEmail}&token=${token}`;
+  const url = `http://localhost:3000/reset-password?akun=${encodedEmail}&token=${token}`;
 
   const content = `
-  <p>Assalamu'alaikum, Wr Wb.</p>
+  <p>Reset Password Odsys.</p>
   <p>Anda telah melakukan permintaan untuk melakukan reset password.</p>
   <p>Untuk melanjutkan proses reset password, silahkan klik link berikut:</p>
   <br />

@@ -8,20 +8,24 @@ datasource db {
 }
 
 model user_type {
-  id                               Int     @id @default(autoincrement())
-  type_name                        String? @db.VarChar(20)
-  users_users_user_typeTouser_type users[] @relation("users_user_typeTouser_type")
+  id                               Int         @id @default(autoincrement())
+  type_name                        String?     @unique(map: "user_type_unique") @db.VarChar(20)
+  role_menu                        role_menu[]
+  users_users_user_typeTouser_type users[]     @relation("users_user_typeTouser_type")
 }
 
 model users {
-  id                                   Int        @id @default(autoincrement())
-  username                             String     @unique(map: "users_unique") @db.VarChar(255)
-  userpassword                         String     @db.Text
-  user_status                          Int?       @default(1) @db.SmallInt
-  user_create_datetime                 DateTime?  @default(now()) @db.Timestamp(0)
-  user_type                            Int?
-  user_token                           String?    @db.LongText
-  user_type_users_user_typeTouser_type user_type? @relation("users_user_typeTouser_type", fields: [user_type], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "users_user_type_FK")
+  id                                   Int            @id @default(autoincrement())
+  username                             String         @unique(map: "users_unique") @db.VarChar(255)
+  userpassword                         String         @db.Text
+  user_status                          Int?           @default(1) @db.SmallInt
+  user_create_datetime                 DateTime?      @default(now()) @db.Timestamp(0)
+  user_type                            Int?           @default(1)
+  user_token                           String?        @db.LongText
+  log                                  log[]
+  user_address                         user_address[]
+  user_profile                         user_profile[]
+  user_type_users_user_typeTouser_type user_type?     @relation("users_user_typeTouser_type", fields: [user_type], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "users_user_type_FK")
 
   @@index([user_type], map: "users_user_type_FK")
 }
@@ -70,6 +74,7 @@ model groups {
 
 model user_profile {
   id                   Int          @id @default(autoincrement())
+  user_id              Int?
   user_nama            String       @db.VarChar(100)
   user_phone           String?      @db.VarChar(20)
   user_email           String?      @db.VarChar(200)
@@ -78,20 +83,112 @@ model user_profile {
   user_division        Int?
   user_group           Int?
   user_department      Int?
-  user_grade           Int          @default(0)
-  user_title           Int          @default(0)
+  user_grade           Int?         @default(0)
+  user_title           Int?         @default(0)
   user_foto            String?      @db.VarChar(255)
-  user_ispermanent     Int          @default(1) @db.SmallInt
+  user_ispermanent     Int?         @default(1) @db.SmallInt
   user_status          Int          @default(1) @db.SmallInt
-  user_entrydate       DateTime?    @db.Date
+  user_entrydate       DateTime?    @default(now()) @db.Date
   user_contract_id     Int?
   contracts            contracts?   @relation(fields: [user_contract_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_contracts_FK")
   departments          departments? @relation(fields: [user_department], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_departments_FK")
   divisions            divisions?   @relation(fields: [user_division], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_divisions_FK")
   groups               groups?      @relation(fields: [user_group], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_groups_FK")
+  users                users?       @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_users_FK")
 
   @@index([user_contract_id], map: "user_profile_contracts_FK")
   @@index([user_department], map: "user_profile_departments_FK")
   @@index([user_division], map: "user_profile_divisions_FK")
   @@index([user_group], map: "user_profile_groups_FK")
+  @@index([user_id], map: "user_profile_users_FK")
+}
+
+model cities {
+  city_id      Int            @id @default(autoincrement())
+  city_name    String?        @db.VarChar(255)
+  prov_id      Int?
+  user_address user_address[]
+}
+
+model districts {
+  dis_id       Int            @id @default(autoincrement())
+  dis_name     String?        @db.VarChar(255)
+  city_id      Int?
+  user_address user_address[]
+}
+
+model provinces {
+  prov_id      Int            @id @default(autoincrement())
+  prov_name    String?        @db.VarChar(255)
+  locationid   Int?
+  status       Int?           @default(1)
+  user_address user_address[]
+}
+
+model subdistricts {
+  subdis_id    Int            @id @default(autoincrement())
+  subdis_name  String?        @db.VarChar(255)
+  dis_id       Int?
+  user_address user_address[]
+}
+
+model user_address {
+  id           Int           @id @default(autoincrement())
+  name         String?       @db.VarChar(100)
+  prov_id      Int?
+  city_id      Int?
+  dis_id       Int?
+  subdis_id    Int?
+  address      String?       @db.Text
+  status       Int?          @default(1) @db.SmallInt
+  user_id      Int?
+  cities       cities?       @relation(fields: [city_id], references: [city_id], onDelete: Restrict, onUpdate: Restrict, map: "user_address_cities_FK")
+  districts    districts?    @relation(fields: [dis_id], references: [dis_id], onDelete: Restrict, onUpdate: Restrict, map: "user_address_districts_FK")
+  provinces    provinces?    @relation(fields: [prov_id], references: [prov_id], onDelete: Restrict, onUpdate: Restrict, map: "user_address_provinces_FK")
+  subdistricts subdistricts? @relation(fields: [subdis_id], references: [subdis_id], onDelete: Restrict, onUpdate: Restrict, map: "user_address_subdistricts_FK")
+  users        users?        @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_address_users_FK")
+
+  @@index([city_id], map: "user_address_cities_FK")
+  @@index([dis_id], map: "user_address_districts_FK")
+  @@index([prov_id], map: "user_address_provinces_FK")
+  @@index([subdis_id], map: "user_address_subdistricts_FK")
+  @@index([user_id], map: "user_address_users_FK")
+}
+
+model log {
+  id       Int       @id @default(autoincrement())
+  user_id  Int?
+  datetime DateTime? @default(now()) @db.Timestamp(0)
+  activity String?   @db.VarChar(100)
+  route    String?   @db.VarChar(100)
+  users    users?    @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "log_users_FK")
+
+  @@index([user_id], map: "log_users_FK")
+}
+
+model menu {
+  id           Int         @id @default(autoincrement())
+  parent_id    Int?        @default(0)
+  menu_text    String?     @db.VarChar(15)
+  path         String?     @db.VarChar(100)
+  icon         String?     @db.VarChar(100)
+  notification Int?        @default(0) @db.SmallInt
+  isparent     Int?        @default(0) @db.SmallInt
+  issuperadmin Int?        @default(0) @db.SmallInt
+  menu         menu?       @relation("menuTomenu", fields: [parent_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "menu_menu_FK")
+  other_menu   menu[]      @relation("menuTomenu")
+  role_menu    role_menu[]
+
+  @@index([parent_id], map: "menu_menu_FK")
+}
+
+model role_menu {
+  id        Int        @id @default(autoincrement())
+  menu_id   Int?
+  role_id   Int?
+  menu      menu?      @relation(fields: [menu_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "role_menu_menu_FK")
+  user_type user_type? @relation(fields: [role_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "role_menu_user_type_FK")
+
+  @@index([menu_id], map: "role_menu_menu_FK")
+  @@index([role_id], map: "role_menu_user_type_FK")
 }

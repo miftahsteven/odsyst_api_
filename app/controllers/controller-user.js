@@ -1,10 +1,13 @@
 const { generate } = require("../helper/auth-jwt");
 const { prisma } = require("../../prisma/client");
 const { z } = require("zod");
-const { nanoid } = require("nanoid");
+const { customAlphabet } = require("nanoid");
 const argon2 = require("argon2");
 const { generateTemplate, sendEmail, generateTemplateForgotEmail } = require("../helper/email");
+const {saveLog} = require("../helper/log")
 const crypto = require("node:crypto");
+const { includes } = require("lodash");
+const moment  = require("moment");
 
 module.exports = {
   // LOGIN USER 
@@ -20,13 +23,27 @@ module.exports = {
 
       const user = await prisma.users.findUnique({        
         where: {          
-          username          
-       },
+          username
+        },
+        include: {                        
+            user_profile: {
+                include: {
+                  groups: true,
+                  divisions: true
+                }
+            }            
+        }
       });
 
       if (!user) {
         return res.status(400).json({
           message: "Username atau Password Salah",
+        });
+      }
+
+      if (!user.user_status == 1) {
+        return res.status(400).json({
+          message: "User Tidak Aktif",
         });
       }
 
@@ -47,6 +64,8 @@ module.exports = {
 
       const cleanUser = omit(user, ["userpassword", "user_token"]);
 
+      console.log('CLEAN', JSON.stringify(cleanUser));
+
       const token = generate(cleanUser);
 
       await prisma.users.update({
@@ -58,6 +77,8 @@ module.exports = {
         },
       });
 
+      const savelog =  saveLog({user_id: user.id, activity: 'User Login', route: 'auth/login'});
+
       return res.status(200).json({
         message: "Login Berhasil",
         data: cleanUser,
@@ -68,20 +89,29 @@ module.exports = {
         message: error?.message,
       });
     }
-  },
+  },  
 
   async registerUser(req, res) {
     try {
       const schema = z.object({
-        username: z.string(),
-        user_type: z.number(),
+        username: z.string({
+          required_error: "Username Harus Diisi Dengan NIP Karyawan",          
+        }).min(3).max(8),
+        user_nama: z.string({
+          required_error: "Nama harus diisi",          
+        }).min(3),
+        user_phone: z.string().min(6).max(12),
+        user_email: z.string().email({ message: "Format email salah" })
       });
 
-      const { username, user_type, email } = req.body;
+      const { username, user_nama, user_phone, user_email, user_type } = req.body;
 
       const body = await schema.safeParseAsync({
         username,        
-        user_type,
+        user_phone : String(user_phone),
+        user_email,
+        user_nama,
+        user_type
       });
 
       let errorObj = {};
@@ -100,52 +130,446 @@ module.exports = {
         });
       }
 
+      //console.log(' --> ',user_email);
+
       const currentUser = await prisma.users.findFirst({
         where: {
-           username: body.data.username 
+           username: username//body.data.username 
         },
       });
 
       if (currentUser) {
         return res.status(400).json({
+          success: false,
           message: "User sudah terdaftar",
         });
       }
-
-      const password = nanoid(10);
+      const nanoid = customAlphabet('1234567890abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ', 6)
+      const password = nanoid();
       const hashedPassword = await argon2.hash(password);
 
       console.log({ password });
 
-      await prisma.users.create({
+      const userdata = await prisma.users.create({
         data: {
           userpassword: hashedPassword,
           username: username,          
           user_type: Number(user_type),
-          user_status: 1
+          user_status: 1,
         },
       });
 
-      const templateEmail = generateTemplate({ email: email, password });
+      const templateEmail = generateTemplate({ email: user_email, password });
       const msgId = await sendEmail({
-        email: body.data.email,
+        email: user_email,
         html: templateEmail,
         subject: "Registrasi ODSyst",
       });
 
       if (!msgId) {
         return res.status(400).json({
+          success: false,
           message: "Gagal mengirim email",
         });
       }
 
+      const userprofiledata = await prisma.user_profile.create({
+        data: {
+          user_id: userdata.id,
+          user_nama,
+          user_phone,
+          user_email,
+          user_employee_number: Number(username),
+          user_status: 1
+        },
+      });
+      
+      const savelog =  saveLog({user_id: userdata.id, activity: `Register System : username ${username}`, route: 'auth/register'});
+
       return res.status(200).json({
-        message: "Sukses",
-        data: "Berhasil Mendaftarkan User",
-        password: password
+        code: "200",
+        message: "Berhasil Mendaftarkan User",
+        data: userprofiledata
       });
     } catch (error) {
       return res.status(500).json({
+        success: false,
+        message: error?.message,
+      });
+    }
+  },
+
+  async getAllUser(req, res) {
+    try {
+      const page = Number(req.query.page || 1);
+      const perPage = Number(req.query.perPage || 10);
+      //const user_status = Number(req.query.status || 4);
+      //const skip = (page - 1) * perPage;
+      //const keyword = req.query.keyword || "";
+      //const user_type = req.query.user_type || "";      
+      const sortBy = req.query.sortBy || "user_id";
+      const sortType = req.query.order || "desc";
+      
+      const params = {
+        users : {
+            user_status: 1
+        }
+      }
+      console.log(JSON.stringify(params));
+
+      const [count, user] = await prisma.$transaction([
+        prisma.user_profile.count({
+          where: params,
+        }),
+        prisma.user_profile.findMany({
+          select: {
+            id: true,            
+            user_nama: true,
+            user_phone: true,
+            user_email: true,
+            user_employee_number: true,
+            user_address: true,
+            user_grade: true,
+            user_entrydate: true,
+            user_foto: true,
+            user_ispermanent: true,
+            users: {
+                select: {
+                    id: true,
+                    username: true,
+                    user_status: true,
+                    user_create_datetime: true,
+                    user_type_users_user_typeTouser_type : true,                    
+                    user_address: {
+                        select : {
+                            id: true,
+                            name: true,
+                            address: true,
+                            provinces: {
+                                select : {
+                                    prov_name : true
+                                }
+                            },
+                            cities : {
+                                select : {
+                                    city_name: true
+                                }
+                            },
+                            districts: {
+                                select : {
+                                    dis_name: true
+                                }
+                            },
+                            subdistricts: {
+                                select : {
+                                    subdis_name: true
+                                }
+                            }
+                        }
+                    }
+                },                
+            },  
+            user_address: true,
+            departments: {
+                select: {
+                    dept_name: true
+                }
+            },
+            divisions: {
+                select: {
+                    division_name: true
+                }
+            },
+            groups: {
+                select: {
+                    group_name: true
+                }
+            }
+          },
+          orderBy: {
+            [sortBy]: sortType,
+          },
+          where: params,
+          //skip,
+          //take: perPage,
+        }),
+      ]);
+
+      const userResult = await Promise.all(
+        user.map(async (item) => {
+          //console.log('---->', JSON.stringify(item.users.user_address.filter(key => key.name === "Office")[0]?.districts?.dis_name));
+          //console.log('---->', JSON.stringify(item.departments?.dept_name));
+          return {
+            //...item,
+            id: item.id,
+            user_id: item.users.id,
+            name: item.user_nama,
+            username: item.users.username,
+            email: item.user_email,
+            departement: item.departments?.dept_name,
+            type: item.users.user_type_users_user_typeTouser_type.type_name,
+            type_id : item.users.user_type_users_user_typeTouser_type.id,
+            status: item.users.user_status,
+            group: item.groups?.group_name,
+            division: item.divisions?.division_name,
+            membershipDate:  moment(item.user_entrydate).format('L'),
+            balance: 0,
+            payout: 0,
+            src: item.user_foto,
+            isOnline: true,
+            streetAddress: item.users.user_address.filter(key => key.name === "Home")[0]?.address,
+            streetAddress2: item.users.user_address.filter(key => key.name === "Home")[0]?.districts.dis_name,
+            city: item.users.user_address.filter(key => key.name === "Home")[0]?.cities.city_name,
+            state: item.users.user_address.filter(key => key.name === "Home")[0]?.provinces.prov_name,
+            stateFull: '',
+            zip: '',
+            streetAddressDelivery: item.users.user_address.filter(key => key.name === "Office")[0]?.address,
+            streetAddress2Delivery: item.users.user_address.filter(key => key.name === "Office")[0]?.subdistricts.subdis_name,
+            cityDelivery: item.users.user_address.filter(key => key.name === "Office")[0]?.cities.city_name,
+            stateDelivery: item.users.user_address.filter(key => key.name === "Office")[0]?.provinces.prov_name,
+            stateFullDelivery: '',
+            zipDelivery: '',
+            phone: item.user_phone,
+            latitude: '',
+            longitude: '',
+            user_entrydate : moment(item.user_entrydate).format('L'),
+            //program_target_amount: Number(item.program_target_amount),
+            //total_donation: total_donation._sum.amount || 0,
+          };
+        })
+      );
+
+      res.status(200).json({
+        // aggregate,
+        message: "Sukses Ambil Data",
+        data: userResult,
+        // pagination: {
+        //   total: count,
+        //   page,
+        //   hasNext: count > page * perPage,
+        //   totalPage: Math.ceil(count / perPage),
+        // },
+      });
+    } catch (error) {
+      console.log('ERROR msg', error);
+      res.status(500).json({
+        message: error?.message,
+      });    
+    }
+  },
+
+
+  async getAllUserInactive(req, res) {
+    try {
+      const page = Number(req.query.page || 1);
+      const perPage = Number(req.query.perPage || 10);
+      const sortBy = req.query.sortBy || "user_id";
+      const sortType = req.query.order || "desc";
+      
+      const params = {
+        users : {
+            user_status: 0
+        }
+      }
+      console.log(JSON.stringify(params));
+
+      const [count, user] = await prisma.$transaction([
+        prisma.user_profile.count({
+          where: params,
+        }),
+        prisma.user_profile.findMany({
+          select: {
+            id: true,            
+            user_nama: true,
+            user_phone: true,
+            user_email: true,
+            user_employee_number: true,
+            user_address: true,
+            user_grade: true,
+            user_entrydate: true,
+            user_foto: true,
+            user_ispermanent: true,
+            users: {
+                select: {
+                    id: true,
+                    username: true,
+                    user_status: true,
+                    user_create_datetime: true,
+                    user_type_users_user_typeTouser_type : true,                    
+                    user_address: {
+                        select : {
+                            id: true,
+                            name: true,
+                            address: true,
+                            provinces: {
+                                select : {
+                                    prov_name : true
+                                }
+                            },
+                            cities : {
+                                select : {
+                                    city_name: true
+                                }
+                            },
+                            districts: {
+                                select : {
+                                    dis_name: true
+                                }
+                            },
+                            subdistricts: {
+                                select : {
+                                    subdis_name: true
+                                }
+                            }
+                        }
+                    }
+                },                
+            },  
+            user_address: true,
+            departments: {
+                select: {
+                    dept_name: true
+                }
+            },
+            divisions: {
+                select: {
+                    division_name: true
+                }
+            },
+            groups: {
+                select: {
+                    group_name: true
+                }
+            }
+          },
+          orderBy: {
+            [sortBy]: sortType,
+          },
+          where: params,
+          //skip,
+          //take: perPage,
+        }),
+      ]);
+
+      const userResult = await Promise.all(
+        user.map(async (item) => {
+          //console.log('---->', JSON.stringify(item.users.user_address.filter(key => key.name === "Office")[0]?.districts?.dis_name));
+          console.log('---->', JSON.stringify(item.departments?.dept_name));
+          return {
+            //...item,
+            id: item.id,
+            user_id: item.users.id,
+            name: item.user_nama,
+            username: item.users.username,
+            email: item.user_email,
+            departement: item.departments?.dept_name,
+            type: item.users.user_type_users_user_typeTouser_type.type_name,
+            type_id : item.users.user_type_users_user_typeTouser_type.id,
+            status: item.users.user_status,
+            group: item.groups?.group_name,
+            division: item.divisions?.division_name,
+            membershipDate:  moment(item.user_entrydate).format('L'),
+            balance: 0,
+            payout: 0,
+            src: item.user_foto,
+            isOnline: true,
+            streetAddress: item.users.user_address.filter(key => key.name === "Home")[0]?.address,
+            streetAddress2: item.users.user_address.filter(key => key.name === "Home")[0]?.districts.dis_name,
+            city: item.users.user_address.filter(key => key.name === "Home")[0]?.cities.city_name,
+            state: item.users.user_address.filter(key => key.name === "Home")[0]?.provinces.prov_name,
+            stateFull: '',
+            zip: '',
+            streetAddressDelivery: item.users.user_address.filter(key => key.name === "Office")[0]?.address,
+            streetAddress2Delivery: item.users.user_address.filter(key => key.name === "Office")[0]?.subdistricts.subdis_name,
+            cityDelivery: item.users.user_address.filter(key => key.name === "Office")[0]?.cities.city_name,
+            stateDelivery: item.users.user_address.filter(key => key.name === "Office")[0]?.provinces.prov_name,
+            stateFullDelivery: '',
+            zipDelivery: '',
+            phone: item.user_phone,
+            latitude: '',
+            longitude: '',
+            user_entrydate : moment(item.user_entrydate).format('L'),
+            //program_target_amount: Number(item.program_target_amount),
+            //total_donation: total_donation._sum.amount || 0,
+          };
+        })
+      );
+
+      res.status(200).json({
+        // aggregate,
+        message: "Sukses Ambil Data",
+        data: userResult,
+        // pagination: {
+        //   total: count,
+        //   page,
+        //   hasNext: count > page * perPage,
+        //   totalPage: Math.ceil(count / perPage),
+        // },
+      });
+    } catch (error) {
+      console.log('ERROR msg', error);
+      res.status(500).json({
+        message: error?.message,
+      });    
+    }
+  },
+
+  async getDataTypeUser(req, res) {
+    try {
+      const page = Number(req.query.page || 1);
+      const perPage = Number(req.query.perPage || 10);
+      //const user_status = Number(req.query.status || 4);
+      //const skip = (page - 1) * perPage;
+      //const keyword = req.query.keyword || "";
+      //const user_type = req.query.user_type || "";      
+      const sortBy = req.query.sortBy || "id";
+      const sortType = req.query.order || "desc";
+
+      const params = {
+        // user_nama: {
+        //   contains: keyword,
+        // },
+        // ...(user_type ? { user_type: Number(user_type) } : {}),
+      };
+
+      const [count, typeUser] = await prisma.$transaction([
+        prisma.user_type.count({
+          where: params,
+        }),
+        prisma.user_type.findMany({          
+          orderBy: {
+            [sortBy]: sortType,
+          },
+          where: params,
+          //skip,
+          //take: perPage,
+        }),
+      ]);
+
+      const typeResult = await Promise.all(
+        typeUser.map(async (item) => {
+          //console.log('---->', JSON.stringify(item.users.user_address.filter(key => key.name === "Office")[0]?.districts?.dis_name));
+          return {
+            ...item,            
+            //program_target_amount: Number(item.program_target_amount),
+            //total_donation: total_donation._sum.amount || 0,
+          };
+        })
+      );
+
+      res.status(200).json({
+        // aggregate,
+        message: "Sukses Ambil Data",
+        data: typeResult,
+        // pagination: {
+        //   total: count,
+        //   page,
+        //   hasNext: count > page * perPage,
+        //   totalPage: Math.ceil(count / perPage),
+        // },
+      });
+    } catch (error) {
+      res.status(500).json({
         message: error?.message,
       });
     }
@@ -283,6 +707,112 @@ module.exports = {
       return res.status(200).json({
         message: "Sukses",
         data: "Berhasil Update Data",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+
+  async inactiveUser(req, res) {
+    try {
+      const id = req.body.id;
+      const status = req.body.statusUser;
+
+      if (!id) {
+        return res.status(400).json({
+          message: "ID tidak boleh kosong"
+        });
+      }
+
+      await prisma.users.update({
+        where: {
+          id: id,
+        },
+        data: {
+          user_status: Number(status),
+          user_token: ''
+        },
+      });
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: "Berhasil Non Aktifkan User",
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+
+  async updateUseOnAdmin(req, res) {
+    try {
+      const userId = req.user_id;
+      const id = req.params.id;
+      const schema = z.object({        
+        user_nama: z.string({
+          required_error: "Nama harus diisi",          
+        }).min(3),
+        user_phone: z.string().min(6).max(12),
+        user_email: z.string().email({ message: "Format email salah" }),
+        user_type: z.number()
+      });
+
+      const { user_id, user_nama, user_phone, user_email, user_type } = req.body;
+
+      const body = await schema.safeParseAsync({        
+        user_phone,
+        user_email,
+        user_nama,
+        user_type
+      });
+
+      let errorObj = {};
+
+      if (body.error) {
+        body.error.issues.forEach((issue) => {
+          errorObj[issue.path[0]] = issue.message;
+        });
+        body.error = errorObj;
+      }
+
+      if (!body.success) {
+        return res.status(400).json({
+          message: "Beberapa Field Harus Diisi",
+          error: errorObj,
+        });
+      }
+
+      //console.log(' --> ',user_email);
+
+      const userprofiledata = await prisma.user_profile.update({
+        data: {
+          user_nama,
+          user_phone,
+          user_email,          
+        },
+        where : {
+            id: Number(id)
+        }
+      });
+
+      const userupdate = await prisma.users.update({
+        data: {
+          user_type          
+        },
+        where : {
+            id: Number(user_id)
+        }
+      });
+      
+      const savelog =  saveLog({user_id: userId, activity: `Update User : username ${user_nama}`, route: 'auth/update/:'+id});
+
+      return res.status(200).json({
+        code: "200",
+        message: "Berhasil Mengupdate User",
+        data: userprofiledata
       });
     } catch (error) {
       return res.status(500).json({
@@ -565,6 +1095,92 @@ module.exports = {
       return res.status(200).json({
         message: "Sukses",
         data: notifications,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+
+  async getAllActivity(req, res) {
+    try {
+      const userId = req.params.id;
+      const sortBy = req.query.sortBy || "id";
+      const sortType = req.query.order || "desc";
+
+      const logData = await prisma.log.findMany({
+        where: {
+          user_id: Number(userId),
+        },
+        // include: {
+        //   program: true,
+        //   transaction: true,
+        // },
+        orderBy: {
+          [sortBy]: sortType,
+        },
+        skip: 0,
+        take: 5,
+      });
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: logData,
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+
+  async logout(req, res) {
+    try{
+      const user_id = req.body.user_id;
+      console.log("user id", user_id);
+      const savelog =  saveLog({user_id: user_id, activity: 'User Logout', route: 'auth/logout'});
+      return res.status(200).json({
+        message: "Sukses Logout",
+        data: [],
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+  async removeUser(req, res) {
+    try {
+      const id = req.body.id;
+
+      if (!id) {
+        return res.status(400).json({
+          message: "ID tidak boleh kosong"
+        });
+      }
+
+      await prisma.user_profile.deleteMany({
+        where: {
+          user_id: Number(id),
+        },        
+      });
+
+      await prisma.log.deleteMany({
+        where: {
+          user_id: Number(id),
+        },        
+      });
+
+      await prisma.users.delete({
+        where: {
+          id: Number(id),
+        },        
+      });
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: "Berhasil Hapus User",
       });
     } catch (error) {
       return res.status(500).json({
