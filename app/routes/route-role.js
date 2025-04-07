@@ -12,6 +12,7 @@ router.put("/update", authentication, role.updateRole);
 //semua list route untuk menu
 router.get("/menus", authentication, menu.getMenu);
 router.get("/menu", authentication, menu.getMenuStructure);
+router.get("/menuAdmin", authentication, menu.getMenuAdminFinal);
 router.get("/role-menus", authentication, menu.getRoleMenu);
 router.post("/tambah-role-menu", authentication, menu.createMenuRole);
 router.put("/update-role-menu", authentication, menu.updateMenuRole);

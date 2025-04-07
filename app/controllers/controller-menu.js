@@ -2,6 +2,16 @@ const { generate } = require("../helper/auth-jwt");
 const { prisma } = require("../../prisma/client");
 const { z } = require("zod");
 const { menu } = require(".");
+const { text } = require("body-parser");
+const path = require("path");
+
+const filterObject = (obj, filter, filterValue) => 
+  Object.keys(obj).reduce((acc, val) => 
+  (obj[val][filter] === filterValue ? acc : {
+      ...acc,
+      [val]: obj[val]
+  }                                        
+), {});
 
 module.exports = {
   async getMenu(req, res) {
@@ -126,18 +136,18 @@ module.exports = {
                 }
             });
 
-          menusChild.map(async(itemchild) => {
-              const menuStructureChild = {
-                  idnum: itemchild.menu.id,
-                  id: (itemchild.menu.menu_text).replace(/\s/g,''),
-                  name: itemchild.menu.menu_text,
-                  path: itemchild.menu.path,
-                  icon: itemchild.menu.icon,
-                  notification: itemchild.menu.notification
-              }
-          })
+          // menusChild.map(async(itemchild) => {
+          //     const menuStructureChild = {
+          //         idnum: itemchild.menu.id,
+          //         id: (itemchild.menu.menu_text).replace(/\s/g,''),
+          //         name: itemchild.menu.menu_text,
+          //         path: itemchild.menu.path,
+          //         icon: itemchild.menu.icon,
+          //         notification: itemchild.menu.notification
+          //     }
+          // })
 
-          const menuParent = {
+          const menuParent =  {
             [(item.menu.menu_text).replace(/\s/g,'')] : {
               idnum: item.id,
               id: (item.menu.menu_text).replace(/\s/g,''),
@@ -147,8 +157,24 @@ module.exports = {
               notification: item.menu.notification,
               subMenu: {[(item.menu.menu_text).replace(/\s/g,'')+item.id] : menusChild},//item.menu.menu_text,           
             } 
-          }          
-          return menuParent
+          }
+
+          //let arrayFinal = []
+
+          // const menuParent =  {
+          //     idnum: item.id,
+          //     id: (item.menu.menu_text).replace(/\s/g,''),
+          //     text: item.menu.menu_text,              
+          //     path: item.menu.path,
+          //     icon: item.menu.icon,
+          //     notification: item.menu.notification,
+          //     subMenu: {[(item.menu.menu_text).replace(/\s/g,'')+item.id] : menusChild},                          
+          // }
+
+          //arrayFinal.push(menuParent)
+          
+            
+          return menuParent;
         })
       )
 
@@ -161,6 +187,94 @@ module.exports = {
         message: error?.message,
       });
     }
+  },
+
+  async getMenuAdminFinal (req, res) {
+
+    const userId = req.user_id;
+    const typeId = req.user.user_type;
+    //const roleId = req.user_type.id;
+    const sortType = req.query.order || "desc";
+    const sortBy = req.query.sortBy || "id";
+
+      try {
+
+        const menus = await prisma.menu.findMany({      
+          select : {
+                id: true,
+                menu_text: true,
+                path: true,        
+                icon: true,
+                notification: true,
+                isparent: true,
+                parent_id: true,
+                role_menu: true,
+                menu: {
+                    select : {
+                        menu_text: true
+                    }
+                }      
+            },
+            // where : {
+            //     role_menu : {
+            //         some : {
+            //             role_id : typeId
+            //         }
+            //     }
+            // },                      
+        });
+
+        console.log("MENUSS1", JSON.stringify(menus));
+
+        const menuAdmin = {}
+
+        //const menuResult = await Promise.all(            
+            menus.filter(datafilter => datafilter.isparent == 1).map(  (items) => {  
+            
+            //console.log("MENUSSFINAL", menus.filter(itemdata => itemdata.isparent == 0 && itemdata.parent_id == items.id));
+           
+                  let menuSub = {}                 
+                  menuAdmin[items.menu_text.replace(/\s/g,'')] = {
+                    idnum: items.id,
+                    id: (items.menu.menu_text).replace(/\s/g,''),
+                    text: items.menu.menu_text,              
+                    path: items.path?? "",
+                    icon: items.icon?? "",
+                    notification: items.menu.notification?? Boolean(false),                   
+                  }      
+                  
+                  let dataanakvalue = menus.filter(itemdata => itemdata.isparent == 0 &&  itemdata.parent_id == items.id && itemdata.role_menu.some(itemrole => itemrole.role_id == typeId));
+
+                  menuAdmin[items.menu_text.replace(/\s/g,'')].subMenu = {};                  
+
+                  for (const property in dataanakvalue) {
+                    //console.log(`${property}: ${dataanakvalue[property]}`);
+                    menuAdmin[items.menu_text.replace(/\s/g,'')].subMenu[dataanakvalue[property].menu_text.replace(/\s/g,'')+dataanakvalue[property].id] = {
+                        idnum: dataanakvalue[property].id,
+                        id: (dataanakvalue[property].menu_text).replace(/\s/g,''),
+                        text: dataanakvalue[property].menu_text,
+                        path: dataanakvalue[property].path,
+                        notification: dataanakvalue[property].notification,
+                        icon: dataanakvalue[property].icon
+                    }
+                  }
+                  
+            })       
+      
+        return res.status(200).json({
+          message: "Sukses",
+          data: { menuAdmin },
+        });
+
+      } catch (e) {
+
+        return res.status(500).json({
+          error: true,
+          message: e?.message,
+        });
+
+      }
+
   },
 
   async getRoleMenu(req, res) {
