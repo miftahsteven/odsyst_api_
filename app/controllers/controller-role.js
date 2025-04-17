@@ -1,6 +1,7 @@
 const { generate } = require("../helper/auth-jwt");
 const { prisma } = require("../../prisma/client");
 const { z } = require("zod");
+const {saveLog} = require("../helper/log")
 
 module.exports = {
   async getRole(req, res) {
@@ -56,6 +57,8 @@ module.exports = {
         },
       });
 
+      const savelog =  saveLog({user_id: userId, activity: `Register New Role : role name ${type_name}`, route: 'role/tambah'});
+
       res.status(200).json({
         message: "Sukses Membuat Role Baru",
         data: dataBaru
@@ -86,6 +89,8 @@ module.exports = {
           id: Number(id)
         }
       });
+
+      const savelog =  saveLog({user_id: userId, activity: `Update Role : role name ${type_name}`, route: 'role/update'});
 
       res.status(200).json({
         message: "Sukses Update Role",

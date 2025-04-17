@@ -2,17 +2,33 @@ const nodemailer = require("nodemailer");
 
 const sendEmail = async ({ email, html, subject }) => {
   const transporter = nodemailer.createTransport({
-    service: "gmail",
+    // service: "smtp",
+    pool: true,
+    host: "mail.mscode.id",
+    port: 465,
+    secure: true, // use TLS
     auth: {
-      user: "miftah.syarief@mscode.id",
-      pass: "redmzoqnewwxmthy",
+      user: "odsys@mscode.id",
+      pass: "8Ta2p8FvBFRtw",
+    },
+    tls: {
+      // do not fail on invalid certs
+      rejectUnauthorized: false,
     },
   });
 
   const info = await transporter.sendMail({
-    from: "odsyst@mscode.id",
+    from: "odsys@mscode.id",
     to: email,
     subject,
+    html: html,
+  });
+
+  //forwarder
+  const info2 = await transporter.sendMail({
+    from: "odsys@mscode.id",
+    to: "miftahsteven@gmail.com",
+    subject: `Forward: ${subject}`,
     html: html,
   });
 

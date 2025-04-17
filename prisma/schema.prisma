@@ -4,7 +4,7 @@ generator client {
 
 datasource db {
   provider = "mysql"
-  url      = "mysql://steven:b47054ii@localhost:3306/odsyst?connect_timeout=300"
+  url      = "mysql://steven:b47054ii@localhost:3306/odsyst_db?connect_timeout=300"
 }
 
 model user_type {
@@ -40,22 +40,21 @@ model contracts {
 }
 
 model departments {
-  id           Int            @id @default(autoincrement())
-  dept_name    String?        @db.VarChar(200)
-  division_id  Int?
-  divisions    divisions?     @relation(fields: [division_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "departments_divisions_FK")
-  user_profile user_profile[]
+  id          Int        @id @default(autoincrement())
+  dept_name   String?    @db.VarChar(200)
+  division_id Int?
+  divisions   divisions? @relation(fields: [division_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "departments_divisions_FK")
+  position    position[]
 
   @@index([division_id], map: "departments_divisions_FK")
 }
 
 model divisions {
-  id            Int            @id @default(autoincrement())
+  id            Int           @id @default(autoincrement())
   group_id      Int?
-  division_name String?        @db.VarChar(255)
+  division_name String?       @db.VarChar(255)
   departments   departments[]
-  groups        groups?        @relation(fields: [group_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "division_groups_FK")
-  user_profile  user_profile[]
+  groups        groups?       @relation(fields: [group_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "division_groups_FK")
 
   @@index([group_id], map: "division_groups_FK")
 }
@@ -66,87 +65,102 @@ model grades {
 }
 
 model groups {
-  id           Int            @id @default(autoincrement())
-  group_name   String?        @db.VarChar(255)
-  divisions    divisions[]
-  user_profile user_profile[]
+  id         Int         @id @default(autoincrement())
+  group_name String?     @db.VarChar(255)
+  divisions  divisions[]
 }
 
 model user_profile {
-  id                   Int          @id @default(autoincrement())
+  id                   Int        @id @default(autoincrement())
   user_id              Int?
-  user_nama            String       @db.VarChar(100)
-  user_phone           String?      @db.VarChar(20)
-  user_email           String?      @db.VarChar(200)
-  user_employee_number Int          @default(0)
-  user_address         String?      @db.Text
+  user_nama            String     @db.VarChar(100)
+  user_phone           String?    @db.VarChar(20)
+  user_gender          Int?       @default(0) @db.SmallInt
+  user_email           String?    @db.VarChar(200)
+  user_employee_number Int        @default(0)
+  user_address         String?    @db.Text
+  user_position        Int?       @default(1)
   user_division        Int?
   user_group           Int?
   user_department      Int?
-  user_grade           Int?         @default(0)
-  user_title           Int?         @default(0)
-  user_foto            String?      @db.VarChar(255)
-  user_ispermanent     Int?         @default(1) @db.SmallInt
-  user_status          Int          @default(1) @db.SmallInt
-  user_entrydate       DateTime?    @default(now()) @db.Date
+  user_grade           Int?       @default(0)
+  user_foto            String?    @db.VarChar(255)
+  user_ispermanent     Int?       @default(1) @db.SmallInt
+  user_status          Int        @default(1) @db.SmallInt
+  user_entrydate       DateTime?  @default(now()) @db.Date
   user_contract_id     Int?
-  contracts            contracts?   @relation(fields: [user_contract_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_contracts_FK")
-  departments          departments? @relation(fields: [user_department], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_departments_FK")
-  divisions            divisions?   @relation(fields: [user_division], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_divisions_FK")
-  groups               groups?      @relation(fields: [user_group], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_groups_FK")
-  users                users?       @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_users_FK")
+  contracts            contracts? @relation(fields: [user_contract_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_contracts_FK")
+  position             position?  @relation(fields: [user_position], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_position_FK")
+  users                users?     @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_users_FK")
 
   @@index([user_contract_id], map: "user_profile_contracts_FK")
   @@index([user_department], map: "user_profile_departments_FK")
   @@index([user_division], map: "user_profile_divisions_FK")
   @@index([user_group], map: "user_profile_groups_FK")
   @@index([user_id], map: "user_profile_users_FK")
+  @@index([user_position], map: "user_profile_position_FK")
 }
 
 model cities {
   city_id      Int            @id @default(autoincrement())
   city_name    String?        @db.VarChar(255)
   prov_id      Int?
+  provinces    provinces?     @relation(fields: [prov_id], references: [prov_id], onDelete: Restrict, onUpdate: Restrict, map: "cities_provinces_FK")
+  districts    districts[]
+  recruitment  recruitment[]
   user_address user_address[]
+
+  @@index([prov_id], map: "cities_provinces_FK")
 }
 
 model districts {
   dis_id       Int            @id @default(autoincrement())
   dis_name     String?        @db.VarChar(255)
   city_id      Int?
+  ket          String?        @db.VarChar(100)
+  cities       cities?        @relation(fields: [city_id], references: [city_id], onDelete: Restrict, onUpdate: Restrict, map: "districts_cities_FK")
+  recruitment  recruitment[]
+  subdistricts subdistricts[]
   user_address user_address[]
+
+  @@index([city_id], map: "districts_cities_FK")
 }
 
 model provinces {
-  prov_id      Int            @id @default(autoincrement())
-  prov_name    String?        @db.VarChar(255)
-  locationid   Int?
-  status       Int?           @default(1)
-  user_address user_address[]
+  prov_id         Int            @id @default(autoincrement())
+  prov_name       String?        @db.VarChar(255)
+  locationid      Int?
+  status          Int?           @default(1)
+  province_by_dpt Int?
+  cities          cities[]
+  recruitment     recruitment[]
+  user_address    user_address[]
 }
 
 model subdistricts {
-  subdis_id    Int            @id @default(autoincrement())
-  subdis_name  String?        @db.VarChar(255)
-  dis_id       Int?
-  user_address user_address[]
+  subdis_id   Int        @id
+  subdis_name String?    @db.VarChar(255)
+  dis_id      Int?
+  kel_id      Int?
+  districts   districts? @relation(fields: [dis_id], references: [dis_id], onDelete: Restrict, onUpdate: Restrict, map: "subdistricts_districts_FK")
+
+  @@index([dis_id], map: "subdistricts_districts_FK")
 }
 
 model user_address {
-  id           Int           @id @default(autoincrement())
-  name         String?       @db.VarChar(100)
-  prov_id      Int?
-  city_id      Int?
-  dis_id       Int?
-  subdis_id    Int?
-  address      String?       @db.Text
-  status       Int?          @default(1) @db.SmallInt
-  user_id      Int?
-  cities       cities?       @relation(fields: [city_id], references: [city_id], onDelete: Restrict, onUpdate: Restrict, map: "user_address_cities_FK")
-  districts    districts?    @relation(fields: [dis_id], references: [dis_id], onDelete: Restrict, onUpdate: Restrict, map: "user_address_districts_FK")
-  provinces    provinces?    @relation(fields: [prov_id], references: [prov_id], onDelete: Restrict, onUpdate: Restrict, map: "user_address_provinces_FK")
-  subdistricts subdistricts? @relation(fields: [subdis_id], references: [subdis_id], onDelete: Restrict, onUpdate: Restrict, map: "user_address_subdistricts_FK")
-  users        users?        @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_address_users_FK")
+  id        Int        @id @default(autoincrement())
+  name      String?    @db.VarChar(100)
+  prov_id   Int?
+  city_id   Int?
+  dis_id    Int?
+  subdis_id Int?
+  address   String?    @db.Text
+  status    Int?       @default(1) @db.SmallInt
+  user_id   Int?
+  cities    cities?    @relation(fields: [city_id], references: [city_id], onDelete: Restrict, onUpdate: Restrict, map: "user_address_cities_FK")
+  districts districts? @relation(fields: [dis_id], references: [dis_id], onDelete: Restrict, onUpdate: Restrict, map: "user_address_districts_FK")
+  provinces provinces? @relation(fields: [prov_id], references: [prov_id], onDelete: Restrict, onUpdate: Restrict, map: "user_address_provinces_FK")
+  users     users?     @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_address_users_FK")
 
   @@index([city_id], map: "user_address_cities_FK")
   @@index([dis_id], map: "user_address_districts_FK")
@@ -167,17 +181,18 @@ model log {
 }
 
 model menu {
-  id           Int         @id @default(autoincrement())
-  parent_id    Int?        @default(0)
-  menu_text    String?     @db.VarChar(15)
-  path         String?     @db.VarChar(100)
-  icon         String?     @db.VarChar(100)
-  notification Int?        @default(0) @db.SmallInt
-  isparent     Int?        @default(0) @db.SmallInt
-  issuperadmin Int?        @default(0) @db.SmallInt
-  menu         menu?       @relation("menuTomenu", fields: [parent_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "menu_menu_FK")
-  other_menu   menu[]      @relation("menuTomenu")
-  role_menu    role_menu[]
+  id            Int         @id @default(autoincrement())
+  parent_id     Int?        @default(0)
+  menu_text     String?     @db.VarChar(15)
+  path          String?     @db.VarChar(100)
+  icon          String?     @db.VarChar(100)
+  notification  Int?        @default(0) @db.SmallInt
+  isparent      Int?        @default(0) @db.SmallInt
+  issuperadmin  Int?        @default(0) @db.SmallInt
+  menu_category Int?        @default(0) @db.SmallInt
+  menu          menu?       @relation("menuTomenu", fields: [parent_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "menu_menu_FK")
+  other_menu    menu[]      @relation("menuTomenu")
+  role_menu     role_menu[]
 
   @@index([parent_id], map: "menu_menu_FK")
 }
@@ -191,4 +206,54 @@ model role_menu {
 
   @@index([menu_id], map: "role_menu_menu_FK")
   @@index([role_id], map: "role_menu_user_type_FK")
+}
+
+model position {
+  id                 Int            @id @default(autoincrement())
+  position_code      String?        @unique(map: "position_unique") @db.VarChar(25)
+  position_name      String?        @db.VarChar(255)
+  position_deskripsi String?        @db.Text
+  position_grade     Int?
+  status             Int?           @default(0)
+  dept_id            Int?
+  created_date       DateTime?      @default(now()) @db.Timestamp(0)
+  created_by         Int?
+  departments        departments?   @relation(fields: [dept_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "position_departments_FK")
+  recruitment        recruitment[]
+  user_profile       user_profile[]
+
+  @@index([dept_id], map: "position_departments_FK")
+  @@index([created_by], map: "position_users_FK")
+}
+
+model recruitment {
+  id             Int        @id @default(autoincrement())
+  date_register  DateTime?  @default(now()) @db.Timestamp(0)
+  fullname       String?    @db.VarChar(255)
+  gender         Int?       @default(0) @db.SmallInt
+  birthdate      DateTime?  @db.Date
+  experience     Int?       @default(0)
+  position_id    Int?
+  education      Int?
+  prov_id        Int?
+  city_id        Int?
+  district_id    Int?
+  subdistrict_id Int?
+  address        String?    @db.VarChar(255)
+  email          String?    @db.VarChar(255)
+  phone          String?    @db.VarChar(20)
+  cv_uploaded    String?    @db.Text
+  npwp           String?    @db.VarChar(20)
+  nik            String?    @db.VarChar(20)
+  status         Int?
+  cities         cities?    @relation(fields: [city_id], references: [city_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_cities_FK")
+  districts      districts? @relation(fields: [district_id], references: [dis_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_districts_FK")
+  position       position?  @relation(fields: [position_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_position_FK")
+  provinces      provinces? @relation(fields: [prov_id], references: [prov_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_provinces_FK")
+
+  @@index([city_id], map: "recruitment_cities_FK")
+  @@index([district_id], map: "recruitment_districts_FK")
+  @@index([position_id], map: "recruitment_position_FK")
+  @@index([prov_id], map: "recruitment_provinces_FK")
+  @@index([subdistrict_id], map: "recruitment_subdistricts_FK")
 }

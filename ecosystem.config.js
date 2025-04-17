@@ -1,6 +1,6 @@
 module.exports = {
   apps : [{
-    name: "app",
+    name: "app-odsyst",
     script: "app.js",
     env: {
       NODE_ENV: "development",

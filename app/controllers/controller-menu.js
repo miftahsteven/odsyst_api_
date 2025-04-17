@@ -4,6 +4,7 @@ const { z } = require("zod");
 const { menu } = require(".");
 const { text } = require("body-parser");
 const path = require("path");
+const {saveLog} = require("../helper/log")
 
 const filterObject = (obj, filter, filterValue) => 
   Object.keys(obj).reduce((acc, val) => 
@@ -209,6 +210,7 @@ module.exports = {
                 isparent: true,
                 parent_id: true,
                 role_menu: true,
+                menu_category: true,
                 menu: {
                     select : {
                         menu_text: true
@@ -216,11 +218,7 @@ module.exports = {
                 }      
             },
             // where : {
-            //     role_menu : {
-            //         some : {
-            //             role_id : typeId
-            //         }
-            //     }
+            //     menu_category: 0
             // },                      
         });
 
@@ -240,6 +238,7 @@ module.exports = {
                     text: items.menu.menu_text,              
                     path: items.path?? "",
                     icon: items.icon?? "",
+                    category: items.menu_category?? 0,
                     notification: items.menu.notification?? Boolean(false),                   
                   }      
                   
@@ -275,13 +274,13 @@ module.exports = {
 
       }
 
-  },
+  },  
 
   async getRoleMenu(req, res) {
     try {
       const userId = req.user_id;
       const sortType = req.query.order || "desc";
-      const sortBy = req.query.sortBy || "id";
+      const sortBy = req.query.sortBy || "role_id";
 
       const roleMenus = await prisma.role_menu.findMany({          
           select : {
@@ -375,6 +374,8 @@ module.exports = {
         },
       });
 
+      const savelog =  saveLog({user_id: userId, activity: `Register New Role Menu : Menu Id ${menu_id} Ke Role Id ${role_id} `, route: 'role/tambah-role-menu'});
+
       res.status(200).json({
         message: "Sukses Membuat Role Menu Baru",
         data: dataBaru
@@ -423,6 +424,8 @@ module.exports = {
             id: Number(id)
         }
       });
+
+      const savelog =  saveLog({user_id: userId, activity: `Update Role Menu : Menu Id ${menu_id} Ke Role Id ${role_id} `, route: 'role/update-role-menu'});
 
       res.status(200).json({
         message: "Sukses Mengupdate Role Menu",

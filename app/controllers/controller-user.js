@@ -8,6 +8,7 @@ const {saveLog} = require("../helper/log")
 const crypto = require("node:crypto");
 const { includes } = require("lodash");
 const moment  = require("moment");
+const { group } = require("node:console");
 
 module.exports = {
   // LOGIN USER 
@@ -28,9 +29,22 @@ module.exports = {
         include: {                        
             user_profile: {
                 include: {
-                  groups: true,
-                  divisions: true
-                }
+                  //groups: true,
+                  //divisions: true
+                  position: {
+                    include: {
+                      departments: {
+                        include: {
+                          divisions: {
+                            include: {
+                              groups: true
+                            }
+                          }
+                        }
+                      }
+                    }
+                  },
+                }              
             }            
         }
       });
@@ -92,7 +106,9 @@ module.exports = {
   },  
 
   async registerUser(req, res) {
+    
     try {
+      const userId = req.user_id;
       const schema = z.object({
         username: z.string({
           required_error: "Username Harus Diisi Dengan NIP Karyawan",          
@@ -103,8 +119,8 @@ module.exports = {
         user_phone: z.string().min(6).max(12),
         user_email: z.string().email({ message: "Format email salah" })
       });
-
-      const { username, user_nama, user_phone, user_email, user_type } = req.body;
+      
+      const { username, user_nama, user_phone, user_email, user_type, user_gender } = req.body;
 
       const body = await schema.safeParseAsync({
         username,        
@@ -132,18 +148,17 @@ module.exports = {
 
       //console.log(' --> ',user_email);
 
-      const currentUser = await prisma.users.findFirst({
+      const checkDataCode = await prisma.users.findUnique({
         where: {
-           username: username//body.data.username 
+          username: req.body.username,
         },
       });
-
-      if (currentUser) {
+      if (checkDataCode) {
         return res.status(400).json({
-          success: false,
-          message: "User sudah terdaftar",
+          message: "Username sudah terdaftar",
         });
       }
+
       const nanoid = customAlphabet('1234567890abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ', 6)
       const password = nanoid();
       const hashedPassword = await argon2.hash(password);
@@ -156,6 +171,18 @@ module.exports = {
           username: username,          
           user_type: Number(user_type),
           user_status: 1,
+        },
+      });
+
+      const userprofiledata = await prisma.user_profile.create({
+        data: {
+          user_id: userdata.id,
+          user_nama,
+          user_phone,
+          user_email,
+          user_employee_number: Number(username),
+          user_status: 1,
+          user_gender: Number(user_gender)
         },
       });
 
@@ -172,19 +199,8 @@ module.exports = {
           message: "Gagal mengirim email",
         });
       }
-
-      const userprofiledata = await prisma.user_profile.create({
-        data: {
-          user_id: userdata.id,
-          user_nama,
-          user_phone,
-          user_email,
-          user_employee_number: Number(username),
-          user_status: 1
-        },
-      });
       
-      const savelog =  saveLog({user_id: userdata.id, activity: `Register System : username ${username}`, route: 'auth/register'});
+      const savelog =  saveLog({user_id: userId, activity: `Register System : username ${username}`, route: 'auth/register'});
 
       return res.status(200).json({
         code: "200",
@@ -230,6 +246,7 @@ module.exports = {
             user_employee_number: true,
             user_address: true,
             user_grade: true,
+            user_gender: true,
             user_entrydate: true,
             user_foto: true,
             user_ispermanent: true,
@@ -270,21 +287,44 @@ module.exports = {
                 },                
             },  
             user_address: true,
-            departments: {
+            position: {  
                 select: {
-                    dept_name: true
+                    position_name: true,
+                    position_code: true,
+                    position_grade: true,
+                    departments: {
+                        select: {
+                            id: true,
+                            dept_name: true,  
+                            divisions: {
+                                select: {
+                                    division_name: true,
+                                    groups: {  
+                                        select: {
+                                            group_name: true
+                                        }
+                                    }
+                                }
+                            },
+                        }
+                    },                      
                 }
             },
-            divisions: {
-                select: {
-                    division_name: true
-                }
-            },
-            groups: {
-                select: {
-                    group_name: true
-                }
-            }
+            // departments: {
+            //     select: {
+            //         dept_name: true
+            //     }
+            // },
+            // divisions: {
+            //     select: {
+            //         division_name: true
+            //     }
+            // },
+            // groups: {
+            //     select: {
+            //         group_name: true
+            //     }
+            // }
           },
           orderBy: {
             [sortBy]: sortType,
@@ -306,12 +346,14 @@ module.exports = {
             name: item.user_nama,
             username: item.users.username,
             email: item.user_email,
-            departement: item.departments?.dept_name,
+            title: item.position.position_name,
+            grade: item.position.position_grade,
+            departement: item.position.departments?.dept_name,
             type: item.users.user_type_users_user_typeTouser_type.type_name,
             type_id : item.users.user_type_users_user_typeTouser_type.id,
             status: item.users.user_status,
-            group: item.groups?.group_name,
-            division: item.divisions?.division_name,
+            group: item.position.departments?.divisions?.groups?.group_name,
+            division: item.position.departments?.divisions?.division_name,
             membershipDate:  moment(item.user_entrydate).format('L'),
             balance: 0,
             payout: 0,
@@ -333,6 +375,7 @@ module.exports = {
             latitude: '',
             longitude: '',
             user_entrydate : moment(item.user_entrydate).format('L'),
+            user_gender: item.user_gender
             //program_target_amount: Number(item.program_target_amount),
             //total_donation: total_donation._sum.amount || 0,
           };
@@ -718,6 +761,7 @@ module.exports = {
   async inactiveUser(req, res) {
     try {
       const id = req.body.id;
+      const userId = req.user_id;
       const status = req.body.statusUser;
 
       if (!id) {
@@ -735,6 +779,12 @@ module.exports = {
           user_token: ''
         },
       });
+
+      if (status == 0) {
+        const savelog =  saveLog({user_id: userId, activity: `Inactivated User : User Id ${id}`, route: 'auth/inactivated'});
+      } else {
+        const savelog =  saveLog({user_id: userId, activity: `Activated User : User Id ${id}`, route: 'auth/inactivated'});
+      }
 
       return res.status(200).json({
         message: "Sukses",
@@ -1153,12 +1203,19 @@ module.exports = {
   async removeUser(req, res) {
     try {
       const id = req.body.id;
+      const userId = req.user_id;
 
       if (!id) {
         return res.status(400).json({
           message: "ID tidak boleh kosong"
         });
       }
+
+      const user = await prisma.users.findFirst({        
+        where: {          
+          id: Number(id),
+        },
+      });
 
       await prisma.user_profile.deleteMany({
         where: {
@@ -1177,6 +1234,8 @@ module.exports = {
           id: Number(id),
         },        
       });
+
+      const savelog =  saveLog({user_id: userId, activity: `Delete User : username ${user.username}`, route: 'auth/remove'});
 
       return res.status(200).json({
         message: "Sukses",
