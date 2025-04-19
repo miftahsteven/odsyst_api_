@@ -231,7 +231,7 @@ module.exports = {
             user_status: 1
         }
       }
-      console.log(JSON.stringify(params));
+      //console.log(JSON.stringify(params));
 
       const [count, user] = await prisma.$transaction([
         prisma.user_profile.count({
@@ -245,6 +245,30 @@ module.exports = {
             user_email: true,
             user_employee_number: true,
             user_address: true,
+            subdistricts: {
+                select: {
+                    subdis_id: true,
+                    subdis_name: true,
+                    districts: {
+                        select: {
+                            dis_id: true,
+                            dis_name: true,
+                            cities: {
+                                select: {
+                                    city_id: true,
+                                    city_name: true,
+                                    provinces: {
+                                        select: {
+                                            prov_id: true,
+                                            prov_name: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                  }
+            },
             user_grade: true,
             user_gender: true,
             user_entrydate: true,
@@ -256,37 +280,9 @@ module.exports = {
                     username: true,
                     user_status: true,
                     user_create_datetime: true,
-                    user_type_users_user_typeTouser_type : true,                    
-                    user_address: {
-                        select : {
-                            id: true,
-                            name: true,
-                            address: true,
-                            provinces: {
-                                select : {
-                                    prov_name : true
-                                }
-                            },
-                            cities : {
-                                select : {
-                                    city_name: true
-                                }
-                            },
-                            districts: {
-                                select : {
-                                    dis_name: true
-                                }
-                            },
-                            subdistricts: {
-                                select : {
-                                    subdis_name: true
-                                }
-                            }
-                        }
-                    }
+                    user_type_users_user_typeTouser_type : true,                                        
                 },                
             },  
-            user_address: true,
             position: {  
                 select: {
                     position_name: true,
@@ -309,22 +305,7 @@ module.exports = {
                         }
                     },                      
                 }
-            },
-            // departments: {
-            //     select: {
-            //         dept_name: true
-            //     }
-            // },
-            // divisions: {
-            //     select: {
-            //         division_name: true
-            //     }
-            // },
-            // groups: {
-            //     select: {
-            //         group_name: true
-            //     }
-            // }
+            },            
           },
           orderBy: {
             [sortBy]: sortType,
@@ -359,25 +340,23 @@ module.exports = {
             payout: 0,
             src: item.user_foto,
             isOnline: true,
-            streetAddress: item.users.user_address.filter(key => key.name === "Home")[0]?.address,
-            streetAddress2: item.users.user_address.filter(key => key.name === "Home")[0]?.districts.dis_name,
-            city: item.users.user_address.filter(key => key.name === "Home")[0]?.cities.city_name,
-            state: item.users.user_address.filter(key => key.name === "Home")[0]?.provinces.prov_name,
+            streetAddress: item.user_profile?.user_address,
+            streetAddress2: item.user_profile?.subdistricts?.districts?.dis_name,
+            city: item.user_profile?.subdistricts?.districts?.cities?.city_name,
+            state: item.user_profile?.subdistricts?.districts?.cities?.provinces?.prov_name,
             stateFull: '',
             zip: '',
-            streetAddressDelivery: item.users.user_address.filter(key => key.name === "Office")[0]?.address,
-            streetAddress2Delivery: item.users.user_address.filter(key => key.name === "Office")[0]?.subdistricts.subdis_name,
-            cityDelivery: item.users.user_address.filter(key => key.name === "Office")[0]?.cities.city_name,
-            stateDelivery: item.users.user_address.filter(key => key.name === "Office")[0]?.provinces.prov_name,
+            streetAddressDelivery: item.user_profile?.user_address,
+            streetAddress2Delivery: item.user_profile?.subdistricts?.subdis_name,
+            cityDelivery: item.user_profile?.subdistricts?.districts?.cities?.city_name,
+            stateDelivery: item.user_profile?.subdistricts?.districts?.cities?.provinces?.prov_name,
             stateFullDelivery: '',
             zipDelivery: '',
             phone: item.user_phone,
             latitude: '',
             longitude: '',
             user_entrydate : moment(item.user_entrydate).format('L'),
-            user_gender: item.user_gender
-            //program_target_amount: Number(item.program_target_amount),
-            //total_donation: total_donation._sum.amount || 0,
+            user_gender: item.user_gender            
           };
         })
       );
@@ -439,36 +418,8 @@ module.exports = {
                     user_status: true,
                     user_create_datetime: true,
                     user_type_users_user_typeTouser_type : true,                    
-                    user_address: {
-                        select : {
-                            id: true,
-                            name: true,
-                            address: true,
-                            provinces: {
-                                select : {
-                                    prov_name : true
-                                }
-                            },
-                            cities : {
-                                select : {
-                                    city_name: true
-                                }
-                            },
-                            districts: {
-                                select : {
-                                    dis_name: true
-                                }
-                            },
-                            subdistricts: {
-                                select : {
-                                    subdis_name: true
-                                }
-                            }
-                        }
-                    }
                 },                
-            },  
-            user_address: true,
+            },              
             departments: {
                 select: {
                     dept_name: true
@@ -497,7 +448,7 @@ module.exports = {
       const userResult = await Promise.all(
         user.map(async (item) => {
           //console.log('---->', JSON.stringify(item.users.user_address.filter(key => key.name === "Office")[0]?.districts?.dis_name));
-          console.log('---->', JSON.stringify(item.departments?.dept_name));
+          //console.log('---->', JSON.stringify(item.departments?.dept_name));
           return {
             //...item,
             id: item.id,
@@ -515,17 +466,17 @@ module.exports = {
             balance: 0,
             payout: 0,
             src: item.user_foto,
-            isOnline: true,
-            streetAddress: item.users.user_address.filter(key => key.name === "Home")[0]?.address,
-            streetAddress2: item.users.user_address.filter(key => key.name === "Home")[0]?.districts.dis_name,
-            city: item.users.user_address.filter(key => key.name === "Home")[0]?.cities.city_name,
-            state: item.users.user_address.filter(key => key.name === "Home")[0]?.provinces.prov_name,
+            isOnline: true,            
+            streetAddress: item.user_profile.user_address,
+            streetAddress2: item.user_profile.subdistricts.districts.dis_name,
+            city: item.user_profile.subdistricts.districts.cities.city_name,
+            state: item.user_profile.subdistricts.districts.cities.provinces.prov_name,
             stateFull: '',
             zip: '',
-            streetAddressDelivery: item.users.user_address.filter(key => key.name === "Office")[0]?.address,
-            streetAddress2Delivery: item.users.user_address.filter(key => key.name === "Office")[0]?.subdistricts.subdis_name,
-            cityDelivery: item.users.user_address.filter(key => key.name === "Office")[0]?.cities.city_name,
-            stateDelivery: item.users.user_address.filter(key => key.name === "Office")[0]?.provinces.prov_name,
+            streetAddressDelivery: item.user_profile.user_address,
+            streetAddress2Delivery: item.user_profile.subdistricts.subdis_name,
+            cityDelivery: item.user_profile.subdistricts.districts.cities.city_name,
+            stateDelivery: item.user_profile.subdistricts.districts.cities.provinces.prov_name,
             stateFullDelivery: '',
             zipDelivery: '',
             phone: item.user_phone,

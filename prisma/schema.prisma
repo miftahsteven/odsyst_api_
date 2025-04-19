@@ -60,8 +60,9 @@ model divisions {
 }
 
 model grades {
-  id         Int     @id @default(autoincrement())
-  grade_name String? @db.VarChar(20)
+  id           Int            @id @default(autoincrement())
+  grade_name   String?        @db.VarChar(50)
+  user_profile user_profile[]
 }
 
 model groups {
@@ -71,27 +72,30 @@ model groups {
 }
 
 model user_profile {
-  id                   Int        @id @default(autoincrement())
+  id                   Int           @id @default(autoincrement())
   user_id              Int?
-  user_nama            String     @db.VarChar(100)
-  user_phone           String?    @db.VarChar(20)
-  user_gender          Int?       @default(0) @db.SmallInt
-  user_email           String?    @db.VarChar(200)
-  user_employee_number Int        @default(0)
-  user_address         String?    @db.Text
-  user_position        Int?       @default(1)
+  user_nama            String        @db.VarChar(100)
+  user_phone           String?       @db.VarChar(20)
+  user_gender          Int?          @default(0) @db.SmallInt
+  user_email           String?       @db.VarChar(200)
+  user_employee_number Int           @default(0)
+  user_address         String?       @db.Text
+  user_subdistrict     Int?
+  user_position        Int?          @default(1)
   user_division        Int?
   user_group           Int?
   user_department      Int?
-  user_grade           Int?       @default(0)
-  user_foto            String?    @db.VarChar(255)
-  user_ispermanent     Int?       @default(1) @db.SmallInt
-  user_status          Int        @default(1) @db.SmallInt
-  user_entrydate       DateTime?  @default(now()) @db.Date
+  user_grade           Int?          @default(1)
+  user_foto            String?       @db.VarChar(255)
+  user_ispermanent     Int?          @default(1) @db.SmallInt
+  user_status          Int           @default(1) @db.SmallInt
+  user_entrydate       DateTime?     @default(now()) @db.Date
   user_contract_id     Int?
-  contracts            contracts? @relation(fields: [user_contract_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_contracts_FK")
-  position             position?  @relation(fields: [user_position], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_position_FK")
-  users                users?     @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_users_FK")
+  contracts            contracts?    @relation(fields: [user_contract_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_contracts_FK")
+  grades               grades?       @relation(fields: [user_grade], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_grades_FK")
+  position             position?     @relation(fields: [user_position], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_position_FK")
+  subdistricts         subdistricts? @relation(fields: [user_subdistrict], references: [subdis_id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_subdistricts_FK")
+  users                users?        @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_users_FK")
 
   @@index([user_contract_id], map: "user_profile_contracts_FK")
   @@index([user_department], map: "user_profile_departments_FK")
@@ -99,6 +103,8 @@ model user_profile {
   @@index([user_group], map: "user_profile_groups_FK")
   @@index([user_id], map: "user_profile_users_FK")
   @@index([user_position], map: "user_profile_position_FK")
+  @@index([user_grade], map: "user_profile_grades_FK")
+  @@index([user_subdistrict], map: "user_profile_subdistricts_FK")
 }
 
 model cities {
@@ -138,11 +144,12 @@ model provinces {
 }
 
 model subdistricts {
-  subdis_id   Int        @id
-  subdis_name String?    @db.VarChar(255)
-  dis_id      Int?
-  kel_id      Int?
-  districts   districts? @relation(fields: [dis_id], references: [dis_id], onDelete: Restrict, onUpdate: Restrict, map: "subdistricts_districts_FK")
+  subdis_id    Int            @id
+  subdis_name  String?        @db.VarChar(255)
+  dis_id       Int?
+  kel_id       Int?
+  districts    districts?     @relation(fields: [dis_id], references: [dis_id], onDelete: Restrict, onUpdate: Restrict, map: "subdistricts_districts_FK")
+  user_profile user_profile[]
 
   @@index([dis_id], map: "subdistricts_districts_FK")
 }
