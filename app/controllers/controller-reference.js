@@ -45,7 +45,7 @@ module.exports = {
   async getProvinces(req, res) {
     try {
       const userId = req.user_id;
-      const sortType = req.query.order || "desc";
+      const sortType = req.query.order || "asc";
       const sortBy = req.query.sortBy || "prov_id";
 
       const provinces = await prisma.provinces.findMany({
@@ -68,6 +68,66 @@ module.exports = {
       });
     }
   },
+  async getCities(req, res) {
+    try {
+      const userId = req.user_id;
+      //const prov_id = req.params.id;
+      const sortType = req.query.order || "desc";
+      const sortBy = req.query.sortBy || "city_id";
+
+      const cities = await prisma.cities.findMany({
+          select: {
+              city_id: true,
+              city_name: true,
+              prov_id: true,              
+          },
+          // where: {
+          //   prov_id: {
+          //     equals: parseInt(prov_id),
+          //   },
+          // },
+          orderBy: {
+            [sortBy]: sortType,
+          },
+      });
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: cities
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
+  async getDistricts(req, res) {
+    try {
+      const userId = req.user_id;
+      const sortType = req.query.order || "desc";
+      const sortBy = req.query.sortBy || "dis_id";
+
+      const districts = await prisma.districts.findMany({
+          select: {
+              dis_id: true,
+              dis_name: true,
+              city_id: true,              
+          },
+          orderBy: {
+            [sortBy]: sortType,
+          },
+      });
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: districts
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
 
   async getLocations(req, res) {
     try {
@@ -79,19 +139,7 @@ module.exports = {
           select: {
               subdis_id: true,
               subdis_name: true,
-              districts: {
-                select: {
-                  dis_id: true,
-                  dis_name: true,
-                  cities: {
-                    select: {
-                      city_id: true,
-                      city_name: true,         
-                      prov_id: true,  
-                    }
-                  }
-                }
-              },
+              dis_id: true,
           },
           orderBy: {
             [sortBy]: sortType,

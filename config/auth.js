@@ -10,7 +10,7 @@ const authentication = async (req, res, next) => {
     if (headerToken) {
       const token = headerToken.split(" ")[1];
       const payload = verify(token);
-      console.log("+++++++TOKEN", JSON.stringify(token));
+      //console.log("+++++++TOKEN", JSON.stringify(token));
       req.user = payload;
       req.user_id = payload.id;
       //const {id} = req.user;
@@ -20,7 +20,7 @@ const authentication = async (req, res, next) => {
 
       //const user = {};
 
-      console.log("+++++++", JSON.stringify(user));
+      //console.log("+++++++", JSON.stringify(user));
 
       if(user){
         return next();

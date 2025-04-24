@@ -24,6 +24,7 @@ const appReference = require("./app/routes/route-reference");
 
 
 app.use("/public/uploads", express.static(path.join(__dirname, "uploads/")));
+//app.use("/public/cv", express.static(path.join(__dirname, "uploads/uploadcv/")));
 
 app.use(
   cors({

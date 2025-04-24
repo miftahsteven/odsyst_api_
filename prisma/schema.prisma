@@ -148,6 +148,7 @@ model subdistricts {
   subdis_name  String?        @db.VarChar(255)
   dis_id       Int?
   kel_id       Int?
+  recruitment  recruitment[]
   districts    districts?     @relation(fields: [dis_id], references: [dis_id], onDelete: Restrict, onUpdate: Restrict, map: "subdistricts_districts_FK")
   user_profile user_profile[]
 
@@ -234,29 +235,31 @@ model position {
 }
 
 model recruitment {
-  id             Int        @id @default(autoincrement())
-  date_register  DateTime?  @default(now()) @db.Timestamp(0)
-  fullname       String?    @db.VarChar(255)
-  gender         Int?       @default(0) @db.SmallInt
-  birthdate      DateTime?  @db.Date
-  experience     Int?       @default(0)
+  id             Int           @id @default(autoincrement())
+  date_register  DateTime?     @default(now()) @db.Timestamp(0)
+  fullname       String?       @db.VarChar(255)
+  gender         Int?          @default(0) @db.SmallInt
+  birthdate      DateTime?     @db.Date
+  experience     Int?          @default(0)
   position_id    Int?
   education      Int?
   prov_id        Int?
   city_id        Int?
   district_id    Int?
   subdistrict_id Int?
-  address        String?    @db.VarChar(255)
-  email          String?    @db.VarChar(255)
-  phone          String?    @db.VarChar(20)
-  cv_uploaded    String?    @db.Text
-  npwp           String?    @db.VarChar(20)
-  nik            String?    @db.VarChar(20)
+  address        String?       @db.VarChar(255)
+  email          String?       @db.VarChar(255)
+  phone          String?       @db.VarChar(20)
+  cv_uploaded    String?       @db.Text
+  npwp           String?       @db.VarChar(20)
+  nik            String?       @db.VarChar(20)
   status         Int?
-  cities         cities?    @relation(fields: [city_id], references: [city_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_cities_FK")
-  districts      districts? @relation(fields: [district_id], references: [dis_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_districts_FK")
-  position       position?  @relation(fields: [position_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_position_FK")
-  provinces      provinces? @relation(fields: [prov_id], references: [prov_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_provinces_FK")
+  user_input_id  Int?          @default(0)
+  cities         cities?       @relation(fields: [city_id], references: [city_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_cities_FK")
+  districts      districts?    @relation(fields: [district_id], references: [dis_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_districts_FK")
+  position       position?     @relation(fields: [position_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_position_FK")
+  provinces      provinces?    @relation(fields: [prov_id], references: [prov_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_provinces_FK")
+  subdistricts   subdistricts? @relation(fields: [subdistrict_id], references: [subdis_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_subdistricts_FK")
 
   @@index([city_id], map: "recruitment_cities_FK")
   @@index([district_id], map: "recruitment_districts_FK")
