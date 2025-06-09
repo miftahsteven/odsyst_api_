@@ -7,7 +7,7 @@ const generate = (payload) => {
   let token = jwt.sign(payload, secret_key, {
     expiresIn: "7d",
     algorithm: "RS256",
-    issuer: "z3r0bytes",
+    issuer: "mscod3s",
   });
 
   return token;
