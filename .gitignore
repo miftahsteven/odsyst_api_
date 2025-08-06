@@ -71,6 +71,9 @@ web_modules/
 
 # Yarn Integrity file
 .yarn-integrity
+yarn.lock
+package-lock.json
+package.json
 
 # dotenv environment variable files
 .env
@@ -128,3 +131,5 @@ dist
 .yarn/build-state.yml
 .yarn/install-state.gz
 .pnp.*
+
+uploads/
