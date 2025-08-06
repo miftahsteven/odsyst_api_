@@ -230,8 +230,9 @@ module.exports = {
             menus.filter(datafilter => datafilter.isparent == 1).map(  (items) => {  
             
             //console.log("MENUSSFINAL", menus.filter(itemdata => itemdata.isparent == 0 && itemdata.parent_id == items.id));
-           
-                  let menuSub = {}                 
+              const checkchildren = menus.filter(itemdata => itemdata.isparent == 0 && itemdata.parent_id == items.id && itemdata.role_menu.some(itemrole => itemrole.role_id == typeId));
+              if (checkchildren.length > 0) {
+                  let menuSub = {}                  
                   menuAdmin[items.menu_text.replace(/\s/g,'')] = {
                     idnum: items.id,
                     id: (items.menu.menu_text).replace(/\s/g,''),
@@ -257,6 +258,11 @@ module.exports = {
                         icon: dataanakvalue[property].icon
                     }
                   }
+                } else {
+                  //just continue
+                  //console.log("ADA CHILDREN", JSON.stringify(checkchildren));
+                  let menuSub = {}
+                }
                   
             })       
       

@@ -22,4 +22,7 @@ router.get("/all-user-inactive", authentication, user.getAllUserInactive);
 router.get("/all-type", authentication, user.getDataTypeUser);
 // router.get("/all-activity", authentication, user.getAllActivity);
 
+//after recruitment process
+router.post("/promote", authentication, user.promote);
+
 module.exports = router;

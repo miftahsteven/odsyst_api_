@@ -15,17 +15,26 @@ model user_type {
 }
 
 model users {
-  id                                   Int            @id @default(autoincrement())
-  username                             String         @unique(map: "users_unique") @db.VarChar(255)
-  userpassword                         String         @db.Text
-  user_status                          Int?           @default(1) @db.SmallInt
-  user_create_datetime                 DateTime?      @default(now()) @db.Timestamp(0)
-  user_type                            Int?           @default(1)
-  user_token                           String?        @db.LongText
-  log                                  log[]
-  user_address                         user_address[]
-  user_profile                         user_profile[]
-  user_type_users_user_typeTouser_type user_type?     @relation("users_user_typeTouser_type", fields: [user_type], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "users_user_type_FK")
+  id                                             Int                   @id @default(autoincrement())
+  username                                       String                @unique(map: "users_unique") @db.VarChar(255)
+  userpassword                                   String                @db.Text
+  user_status                                    Int?                  @default(1) @db.SmallInt
+  user_create_datetime                           DateTime?             @default(now()) @db.Timestamp(0)
+  user_type                                      Int?                  @default(1)
+  user_token                                     String?               @db.LongText
+  absensi                                        absensi[]
+  approval_process                               approval_process[]
+  leave                                          leave[]
+  leave_leave_leave_approval_idTousers           leave[]               @relation("leave_leave_approval_idTousers")
+  log                                            log[]
+  payroll_trans                                  payroll_trans[]
+  recruitment_process                            recruitment_process[]
+  travel_management                              travel_management[]
+  user_address                                   user_address[]
+  user_profile                                   user_profile[]
+  user_profile_user_profile_user_input_idTousers user_profile[]        @relation("user_profile_user_input_idTousers")
+  user_type_users_user_typeTouser_type           user_type?            @relation("users_user_typeTouser_type", fields: [user_type], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "users_user_type_FK")
+  work_from_home                                 work_from_home[]
 
   @@index([user_type], map: "users_user_type_FK")
 }
@@ -72,30 +81,41 @@ model groups {
 }
 
 model user_profile {
-  id                   Int           @id @default(autoincrement())
-  user_id              Int?
-  user_nama            String        @db.VarChar(100)
-  user_phone           String?       @db.VarChar(20)
-  user_gender          Int?          @default(0) @db.SmallInt
-  user_email           String?       @db.VarChar(200)
-  user_employee_number Int           @default(0)
-  user_address         String?       @db.Text
-  user_subdistrict     Int?
-  user_position        Int?          @default(1)
-  user_division        Int?
-  user_group           Int?
-  user_department      Int?
-  user_grade           Int?          @default(1)
-  user_foto            String?       @db.VarChar(255)
-  user_ispermanent     Int?          @default(1) @db.SmallInt
-  user_status          Int           @default(1) @db.SmallInt
-  user_entrydate       DateTime?     @default(now()) @db.Date
-  user_contract_id     Int?
-  contracts            contracts?    @relation(fields: [user_contract_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_contracts_FK")
-  grades               grades?       @relation(fields: [user_grade], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_grades_FK")
-  position             position?     @relation(fields: [user_position], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_position_FK")
-  subdistricts         subdistricts? @relation(fields: [user_subdistrict], references: [subdis_id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_subdistricts_FK")
-  users                users?        @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_users_FK")
+  id                                      Int           @id @default(autoincrement())
+  user_id                                 Int?
+  user_nama                               String        @db.VarChar(100)
+  user_phone                              String?       @db.VarChar(20)
+  user_gender                             Int?          @default(0) @db.SmallInt
+  user_birthdate                          DateTime?     @db.Date
+  user_email                              String?       @db.VarChar(200)
+  user_employee_number                    String        @default("0") @db.VarChar(20)
+  user_nik                                String?       @db.VarChar(20)
+  user_address                            String?       @db.Text
+  user_subdistrict                        Int?
+  user_position                           Int?          @default(1)
+  user_division                           Int?
+  user_group                              Int?
+  user_department                         Int?
+  user_grade                              Int?          @default(1)
+  user_foto                               String?       @db.Text
+  user_ispermanent                        Int?          @default(1) @db.SmallInt
+  user_permanent_date                     DateTime?     @db.Date
+  user_status                             Int           @default(1) @db.SmallInt
+  user_entrydate                          DateTime?     @default(now()) @db.Date
+  user_payroll_id                         Int?
+  user_contract_id                        Int?
+  user_recruitment_id                     Int?
+  user_npwp                               String?       @db.VarChar(16)
+  user_onboarding_date                    DateTime?     @db.Date
+  user_input_id                           Int?
+  payroll                                 payroll[]
+  contracts                               contracts?    @relation(fields: [user_contract_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_contracts_FK")
+  grades                                  grades?       @relation(fields: [user_grade], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_grades_FK")
+  position                                position?     @relation(fields: [user_position], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_position_FK")
+  recruitment                             recruitment?  @relation(fields: [user_recruitment_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_recruitment_FK")
+  subdistricts                            subdistricts? @relation(fields: [user_subdistrict], references: [subdis_id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_subdistricts_FK")
+  users                                   users?        @relation(fields: [user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_users_FK")
+  users_user_profile_user_input_idTousers users?        @relation("user_profile_user_input_idTousers", fields: [user_input_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "user_profile_users_FK_1")
 
   @@index([user_contract_id], map: "user_profile_contracts_FK")
   @@index([user_department], map: "user_profile_departments_FK")
@@ -105,6 +125,9 @@ model user_profile {
   @@index([user_position], map: "user_profile_position_FK")
   @@index([user_grade], map: "user_profile_grades_FK")
   @@index([user_subdistrict], map: "user_profile_subdistricts_FK")
+  @@index([user_payroll_id], map: "user_profile_payroll_settings_FK")
+  @@index([user_input_id], map: "user_profile_users_FK_1")
+  @@index([user_recruitment_id], map: "user_profile_recruitment_FK")
 }
 
 model cities {
@@ -219,6 +242,7 @@ model role_menu {
 model position {
   id                 Int            @id @default(autoincrement())
   position_code      String?        @unique(map: "position_unique") @db.VarChar(25)
+  position_head      Int?
   position_name      String?        @db.VarChar(255)
   position_deskripsi String?        @db.Text
   position_grade     Int?
@@ -227,43 +251,205 @@ model position {
   created_date       DateTime?      @default(now()) @db.Timestamp(0)
   created_by         Int?
   departments        departments?   @relation(fields: [dept_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "position_departments_FK")
+  position           position?      @relation("positionToposition", fields: [position_head], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "position_position_FK")
+  other_position     position[]     @relation("positionToposition")
   recruitment        recruitment[]
   user_profile       user_profile[]
 
   @@index([dept_id], map: "position_departments_FK")
   @@index([created_by], map: "position_users_FK")
+  @@index([position_head], map: "position_position_FK")
 }
 
 model recruitment {
-  id             Int           @id @default(autoincrement())
-  date_register  DateTime?     @default(now()) @db.Timestamp(0)
-  fullname       String?       @db.VarChar(255)
-  gender         Int?          @default(0) @db.SmallInt
-  birthdate      DateTime?     @db.Date
-  experience     Int?          @default(0)
-  position_id    Int?
-  education      Int?
-  prov_id        Int?
-  city_id        Int?
-  district_id    Int?
-  subdistrict_id Int?
-  address        String?       @db.VarChar(255)
-  email          String?       @db.VarChar(255)
-  phone          String?       @db.VarChar(20)
-  cv_uploaded    String?       @db.Text
-  npwp           String?       @db.VarChar(20)
-  nik            String?       @db.VarChar(20)
-  status         Int?
-  user_input_id  Int?          @default(0)
-  cities         cities?       @relation(fields: [city_id], references: [city_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_cities_FK")
-  districts      districts?    @relation(fields: [district_id], references: [dis_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_districts_FK")
-  position       position?     @relation(fields: [position_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_position_FK")
-  provinces      provinces?    @relation(fields: [prov_id], references: [prov_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_provinces_FK")
-  subdistricts   subdistricts? @relation(fields: [subdistrict_id], references: [subdis_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_subdistricts_FK")
+  id                  Int                   @id @default(autoincrement())
+  date_register       DateTime?             @default(now()) @db.Timestamp(0)
+  fullname            String?               @db.VarChar(255)
+  gender              Int?                  @default(0) @db.SmallInt
+  birthdate           DateTime?             @db.Date
+  experience          Int?                  @default(0)
+  position_id         Int?
+  education           Int?
+  prov_id             Int?
+  city_id             Int?
+  district_id         Int?
+  subdistrict_id      Int?
+  address             String?               @db.VarChar(255)
+  email               String?               @db.VarChar(255)
+  phone               String?               @db.VarChar(20)
+  cv_uploaded         String?               @db.Text
+  npwp                String?               @db.VarChar(20)
+  nik                 String?               @db.VarChar(20)
+  status              Int?
+  user_input_id       Int?                  @default(0)
+  approval_process    approval_process[]
+  cities              cities?               @relation(fields: [city_id], references: [city_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_cities_FK")
+  districts           districts?            @relation(fields: [district_id], references: [dis_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_districts_FK")
+  position            position?             @relation(fields: [position_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_position_FK")
+  provinces           provinces?            @relation(fields: [prov_id], references: [prov_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_provinces_FK")
+  recruitment_status  recruitment_status?   @relation(fields: [status], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_recruitment_status_FK")
+  subdistricts        subdistricts?         @relation(fields: [subdistrict_id], references: [subdis_id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_subdistricts_FK")
+  recruitment_process recruitment_process[]
+  user_profile        user_profile[]
 
   @@index([city_id], map: "recruitment_cities_FK")
   @@index([district_id], map: "recruitment_districts_FK")
   @@index([position_id], map: "recruitment_position_FK")
   @@index([prov_id], map: "recruitment_provinces_FK")
   @@index([subdistrict_id], map: "recruitment_subdistricts_FK")
+  @@index([status], map: "recruitment_recruitment_status_FK")
+}
+
+model recruitment_process {
+  id                  Int                 @id @default(autoincrement())
+  recruitment_id      Int?
+  process_status      Int?                @default(1)
+  status_pic_id       Int?
+  process_description String?             @db.Text
+  process_datetime    DateTime?           @default(now()) @db.Timestamp(0)
+  recruitment         recruitment?        @relation(fields: [recruitment_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_process_recruitment_FK")
+  recruitment_status  recruitment_status? @relation(fields: [process_status], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_process_recruitment_status_FK")
+  users               users?              @relation(fields: [status_pic_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "recruitment_process_users_FK")
+
+  @@index([recruitment_id], map: "recruitment_process_recruitment_FK")
+  @@index([status_pic_id], map: "recruitment_process_users_FK")
+  @@index([process_status], map: "recruitment_process_recruitment_status_FK")
+}
+
+model recruitment_status {
+  id                  Int                   @id @default(autoincrement())
+  status              Int?                  @default(0)
+  name                String?               @db.VarChar(100)
+  recruitment         recruitment[]
+  recruitment_process recruitment_process[]
+}
+
+model payroll_tunjangan {
+  id    Int     @id @default(autoincrement())
+  name  String? @db.VarChar(100)
+  type  Int?    @default(0) @db.SmallInt
+  value Float?  @db.Float
+}
+
+model payroll {
+  id                Int           @id @default(autoincrement())
+  name              Int
+  basic_salary      Int?          @default(0)
+  additional_salary String?       @db.Text
+  status            Int?          @default(1) @db.SmallInt
+  user_profile_id   Int?
+  user_profile      user_profile? @relation(fields: [user_profile_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "payroll_user_profile_FK")
+
+  @@index([user_profile_id], map: "payroll_user_profile_FK")
+}
+
+model payroll_approval {
+  id              Int             @id @default(autoincrement())
+  nodin_number    String?         @db.VarChar(50)
+  approval_status Int?            @default(0) @db.SmallInt
+  nodin_date      DateTime?       @default(now()) @db.Date
+  payroll_trans   payroll_trans[]
+}
+
+model payroll_trans {
+  id                    Int               @id @default(autoincrement())
+  user_profile_id       Int?
+  payroll_date_register DateTime?         @default(now()) @db.Timestamp(0)
+  payroll_month         Int?              @default(0)
+  basic_salary          Int?              @default(0)
+  additional_salary     String?           @db.Text
+  potongan              String?           @db.Text
+  description           String?           @db.VarChar(100)
+  nodin_id              Int?
+  payroll_approval      payroll_approval? @relation(fields: [nodin_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "payroll_trans_payroll_approval_FK")
+  users                 users?            @relation(fields: [user_profile_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "payroll_trans_users_FK")
+
+  @@index([nodin_id], map: "payroll_trans_payroll_approval_FK")
+  @@index([user_profile_id], map: "payroll_trans_users_FK")
+}
+
+model approval_process {
+  id               Int          @id @default(autoincrement())
+  user_approval_id Int?
+  user_candidat_id Int?
+  approval_status  Int?         @db.SmallInt
+  approval_desc    String?      @db.VarChar(255)
+  approval_date    DateTime?    @default(now()) @db.Timestamp(0)
+  approval_type    Int?         @default(0) @db.SmallInt
+  recruitment      recruitment? @relation(fields: [user_candidat_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "approval_process_recruitment_FK")
+  users            users?       @relation(fields: [user_approval_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "approval_process_users_FK")
+
+  @@index([user_approval_id], map: "approval_process_users_FK")
+  @@index([user_candidat_id], map: "approval_process_recruitment_FK")
+}
+
+model leave {
+  id                                   Int       @id @default(autoincrement())
+  leave_start_date                     DateTime? @db.Date
+  leave_end_date                       DateTime? @db.Date
+  leave_reason                         String?   @db.VarChar(255)
+  leave_status                         Int?      @default(0) @db.SmallInt
+  leave_user_id                        Int?
+  leave_approval                       Int?      @default(0) @db.SmallInt
+  leave_approval_id                    Int?
+  users                                users?    @relation(fields: [leave_user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "leave_users_FK")
+  users_leave_leave_approval_idTousers users?    @relation("leave_leave_approval_idTousers", fields: [leave_approval_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "leave_users_FK_1")
+
+  @@index([leave_user_id], map: "leave_users_FK")
+  @@index([leave_approval_id], map: "leave_users_FK_1")
+}
+
+model leaving_limit {
+  id          Int  @id @default(autoincrement())
+  grade       Int?
+  leave_limit Int?
+}
+
+model travel_management {
+  id            Int       @id @default(autoincrement())
+  tm_start_date DateTime? @db.Date
+  tm_end_date   DateTime? @db.Date
+  tm_decs       String?   @db.Text
+  tm_user_id    Int?
+  tm_location   String?   @db.VarChar(100)
+  users         users?    @relation(fields: [tm_user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "travel_management_users_FK")
+
+  @@index([tm_user_id], map: "travel_management_users_FK")
+}
+
+model work_from_home {
+  id          Int       @id @default(autoincrement())
+  wfh_date    DateTime? @db.Date
+  wfh_job     String?   @db.Text
+  wfh_status  Int?      @default(0) @db.SmallInt
+  wfh_user_id Int?
+  users       users?    @relation(fields: [wfh_user_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "work_from_home_users_FK")
+
+  @@index([wfh_user_id], map: "work_from_home_users_FK")
+}
+
+model absensi {
+  id          Int         @id @default(autoincrement())
+  user_id     Int
+  absensi_in  DateTime?   @db.DateTime(0)
+  absensi_out DateTime?   @db.DateTime(0)
+  shift_id    Int?        @default(0)
+  long        String?     @db.VarChar(100)
+  lat         String?     @db.VarChar(100)
+  picture     String?     @db.Text
+  status      Int?        @db.SmallInt
+  info_shift  info_shift? @relation(fields: [shift_id], references: [id], onDelete: Restrict, onUpdate: Restrict, map: "absensi_info_shift_FK")
+  users       users       @relation(fields: [user_id], references: [id], onUpdate: Restrict, map: "absensi_users_FK")
+
+  @@index([shift_id], map: "absensi_info_shift_FK")
+  @@index([user_id], map: "absensi_users_FK")
+}
+
+model info_shift {
+  id            Int       @id @default(autoincrement())
+  nama_shift    String?   @db.VarChar(100)
+  day           Int?
+  hour_checkin  DateTime? @db.Time(0)
+  hour_checkout DateTime? @db.Time(0)
+  absensi       absensi[]
 }

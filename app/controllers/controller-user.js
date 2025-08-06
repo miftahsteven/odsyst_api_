@@ -3,12 +3,35 @@ const { prisma } = require("../../prisma/client");
 const { z } = require("zod");
 const { customAlphabet } = require("nanoid");
 const argon2 = require("argon2");
-const { generateTemplate, sendEmail, generateTemplateForgotEmail } = require("../helper/email");
+const { generateTemplate, sendEmail, generateTemplateForgotEmail, generatePromote } = require("../helper/email");
 const {saveLog} = require("../helper/log")
 const crypto = require("node:crypto");
-const { includes } = require("lodash");
+const { includes, get } = require("lodash");
 const moment  = require("moment");
-const { group } = require("node:console");
+const { group, log } = require("node:console");
+
+function generateEmployeeNumber(position_id, date, id) {
+  // Format the date to 'yymmdd'
+  const today = new Date();
+  const formattedDate = today.toISOString().slice(2, 10).replace(/-/g, "");
+  const getyearregister = formattedDate.slice(0, 2);
+
+  //get the year from the date
+  const formatDateRec = date.toISOString().slice(2, 10).replace(/-/g, "");
+   //console.log('DATEINPUT', formatDateRec);
+  const getfrontYear = formatDateRec.slice(0, 2);
+
+  const empnumfront = position_id + getfrontYear + getyearregister;
+
+
+  // Pad the ID with leading zeros to ensure it is 4 characters long
+  const paddedId = String(id).padStart(3, "0");
+
+  // Combine the formatted date and padded ID
+  const employeeNumber = `${empnumfront}${paddedId}`;
+
+  return employeeNumber;
+}
 
 module.exports = {
   // LOGIN USER 
@@ -215,6 +238,112 @@ module.exports = {
     }
   },
 
+  async promote(req, res) {
+    
+    try {
+      const userId = req.user_id;
+      const idrecruitment = req.body.recruitment_id;
+      const idcontract = req.body.contract_id;
+      const onboarding_date = req.body.onboarding_date;
+      //const user_grade = req.body.user_grade;
+      
+      const dataRecruitment = await prisma.recruitment.findUnique({
+        include: {
+          position: true,
+        },
+        where: {
+          id: Number(idrecruitment),
+        },
+      });
+      //console.log("DATA RECRUITMENT", JSON.stringify(dataRecruitment));
+      if (!dataRecruitment) {
+        return res.status(400).json({
+          message: "Data tidak ditemukan",
+        });
+      }
+
+      const nanoid = customAlphabet('1234567890abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ', 6)
+      const password = nanoid();
+      const hashedPassword = await argon2.hash(password);
+
+      //console.log({ password });
+      const username = generateEmployeeNumber(dataRecruitment.position_id, dataRecruitment.birthdate, dataRecruitment.id);
+      const userdata = await prisma.users.create({
+        data: {
+          userpassword: hashedPassword,
+          username: username,         
+          user_type: 1,
+          user_status: 1,
+        },
+      });
+
+      const userprofiledata = await prisma.user_profile.create({
+        data: {
+          user_id: Number(userdata.id),
+          user_recruitment_id: idrecruitment,
+          user_nama: dataRecruitment.fullname,
+          user_phone: dataRecruitment.phone,
+          user_email: dataRecruitment.email,
+          user_gender: Number(dataRecruitment.gender),
+          user_nik: dataRecruitment.nik,
+          user_address: dataRecruitment.address,
+          user_employee_number: username,
+          user_subdistrict: Number(dataRecruitment.subdistrict_id),
+          user_position: Number(dataRecruitment.position_id),
+          user_grade: dataRecruitment.position.position_grade,
+          user_ispermanent: 0,            
+          user_status: 1, //untuk login                    
+          user_birthdate: new Date(dataRecruitment.birthdate),
+          user_npwp: dataRecruitment.npwp,                            
+          user_contract_id: Number(idcontract),          
+          user_onboarding_date: new Date(onboarding_date),
+          user_input_id: Number(userId),
+        },
+      });
+
+      const templateEmail = generatePromote({ name:dataRecruitment.fullname, email: dataRecruitment.email, password });
+      const msgId = await sendEmail({
+        email: dataRecruitment.email,
+        html: templateEmail,
+        subject: "Registrasi Akun ODSyst",
+      });
+
+      if (!msgId) {
+        return res.status(400).json({
+          success: false,
+          message: "Gagal mengirim email",
+        });
+      }
+
+      const changeRecruitment = await prisma.recruitment.update({
+        where: {
+          id: Number(idrecruitment),
+        },
+        data: {
+          status: 8,
+        },
+      });
+      if (!changeRecruitment) {
+        return res.status(400).json({
+          message: "Gagal mengupdate status recruitment",
+        });
+      }
+      
+      const savelog =  saveLog({user_id: userId, activity: `Register Promote Probation : username ${username}`, route: 'auth/register'});
+
+      return res.status(200).json({
+        code: "200",
+        message: "Berhasil Mendaftarkan User Promosi",
+        data: userprofiledata
+      });
+    } catch (error) {
+      return res.status(500).json({
+        success: false,
+        message: error?.message,
+      });
+    }
+  },
+
   async getAllUser(req, res) {
     try {
       const page = Number(req.query.page || 1);
@@ -393,7 +522,7 @@ module.exports = {
             user_status: 0
         }
       }
-      console.log(JSON.stringify(params));
+      //console.log(JSON.stringify(params));
 
       const [count, user] = await prisma.$transaction([
         prisma.user_profile.count({
@@ -407,7 +536,32 @@ module.exports = {
             user_email: true,
             user_employee_number: true,
             user_address: true,
+            subdistricts: {
+                select: {
+                    subdis_id: true,
+                    subdis_name: true,
+                    districts: {
+                        select: {
+                            dis_id: true,
+                            dis_name: true,
+                            cities: {
+                                select: {
+                                    city_id: true,
+                                    city_name: true,
+                                    provinces: {
+                                        select: {
+                                            prov_id: true,
+                                            prov_name: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                  }
+            },
             user_grade: true,
+            user_gender: true,
             user_entrydate: true,
             user_foto: true,
             user_ispermanent: true,
@@ -417,24 +571,32 @@ module.exports = {
                     username: true,
                     user_status: true,
                     user_create_datetime: true,
-                    user_type_users_user_typeTouser_type : true,                    
+                    user_type_users_user_typeTouser_type : true,                                        
                 },                
-            },              
-            departments: {
+            },  
+            position: {  
                 select: {
-                    dept_name: true
+                    position_name: true,
+                    position_code: true,
+                    position_grade: true,
+                    departments: {
+                        select: {
+                            id: true,
+                            dept_name: true,  
+                            divisions: {
+                                select: {
+                                    division_name: true,
+                                    groups: {  
+                                        select: {
+                                            group_name: true
+                                        }
+                                    }
+                                }
+                            },
+                        }
+                    },                      
                 }
-            },
-            divisions: {
-                select: {
-                    division_name: true
-                }
-            },
-            groups: {
-                select: {
-                    group_name: true
-                }
-            }
+            },            
           },
           orderBy: {
             [sortBy]: sortType,
@@ -456,35 +618,36 @@ module.exports = {
             name: item.user_nama,
             username: item.users.username,
             email: item.user_email,
-            departement: item.departments?.dept_name,
+            title: item.position.position_name,
+            grade: item.position.position_grade,
+            departement: item.position.departments?.dept_name,
             type: item.users.user_type_users_user_typeTouser_type.type_name,
             type_id : item.users.user_type_users_user_typeTouser_type.id,
             status: item.users.user_status,
-            group: item.groups?.group_name,
-            division: item.divisions?.division_name,
+            group: item.position.departments?.divisions?.groups?.group_name,
+            division: item.position.departments?.divisions?.division_name,
             membershipDate:  moment(item.user_entrydate).format('L'),
             balance: 0,
             payout: 0,
             src: item.user_foto,
-            isOnline: true,            
-            streetAddress: item.user_profile.user_address,
-            streetAddress2: item.user_profile.subdistricts.districts.dis_name,
-            city: item.user_profile.subdistricts.districts.cities.city_name,
-            state: item.user_profile.subdistricts.districts.cities.provinces.prov_name,
+            isOnline: true,
+            streetAddress: item.user_profile?.user_address,
+            streetAddress2: item.user_profile?.subdistricts?.districts?.dis_name,
+            city: item.user_profile?.subdistricts?.districts?.cities?.city_name,
+            state: item.user_profile?.subdistricts?.districts?.cities?.provinces?.prov_name,
             stateFull: '',
             zip: '',
-            streetAddressDelivery: item.user_profile.user_address,
-            streetAddress2Delivery: item.user_profile.subdistricts.subdis_name,
-            cityDelivery: item.user_profile.subdistricts.districts.cities.city_name,
-            stateDelivery: item.user_profile.subdistricts.districts.cities.provinces.prov_name,
+            streetAddressDelivery: item.user_profile?.user_address,
+            streetAddress2Delivery: item.user_profile?.subdistricts?.subdis_name,
+            cityDelivery: item.user_profile?.subdistricts?.districts?.cities?.city_name,
+            stateDelivery: item.user_profile?.subdistricts?.districts?.cities?.provinces?.prov_name,
             stateFullDelivery: '',
             zipDelivery: '',
             phone: item.user_phone,
             latitude: '',
             longitude: '',
             user_entrydate : moment(item.user_entrydate).format('L'),
-            //program_target_amount: Number(item.program_target_amount),
-            //total_donation: total_donation._sum.amount || 0,
+            user_gender: item.user_gender    
           };
         })
       );

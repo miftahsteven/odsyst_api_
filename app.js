@@ -20,6 +20,8 @@ const appEmployee = require("./app/routes/route-employee");
 const appRole = require("./app/routes/route-role");
 const appRecruitment = require("./app/routes/route-recruitment");
 const appReference = require("./app/routes/route-reference");
+const appLeaving = require("./app/routes/route-leaving");
+const appAbsen = require("./app/routes/route-absen");
 
 
 
@@ -36,6 +38,8 @@ app.use("/emp", appEmployee);
 app.use("/role", appRole);
 app.use("/recruitment", appRecruitment);
 app.use("/reference", appReference);
+app.use("/leaving", appLeaving);
+app.use("/absensi", appAbsen);
 
 
 app.get("/", (req, res) => {

@@ -51,8 +51,27 @@ const generateTemplate = ({ email, password }) => {
   <br />
   <a href="${url}"><strong>LOGIN</strong></a>
   <br />
-  <p>Terima kasih atas partisipasi anda.</p>
-  <p>Tetap semangat</p>
+  <p>Salam Semangat.</p>
+`;
+
+  return content;
+};
+
+const generatePromote = ({ name, email, password }) => {
+  const encodedEmail = Buffer.from(email).toString("base64");
+  const url = `https://localhost:3000/auth/login?akun=${encodedEmail}`;
+
+  const content = `
+  <p>Selamat Datang ${name}.</p>
+  <p>Kami telah melakukan registrasi akunmu di sistem OD-SYS</p>
+  <p>Berikut ini adalah detail login kamu :</p>
+  <p>Username: ${email}</p>
+  <p>Password: ${password}</p>
+  <p>Silahkan lakukan login pada sistem dengan password yang kami kirimkan tersebut.</p>
+  <br />
+  <a href="${url}"><strong>LOGIN</strong></a>
+  <br />
+  <p>Salam Semangat.</p>  
 `;
 
   return content;
@@ -80,4 +99,5 @@ module.exports = {
   sendEmail,
   generateTemplate,
   generateTemplateForgotEmail,
+  generatePromote,
 };

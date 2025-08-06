@@ -10,6 +10,7 @@ router.get("/provinces", authentication, reference.getProvinces);
 router.get("/cities", authentication, reference.getCities);
 router.get("/districts", authentication, reference.getDistricts);
 router.get("/locations", authentication, reference.getLocations);
+router.get("/status-recruitment", authentication, reference.getStatusRecruitment);
 
 
 module.exports = router;

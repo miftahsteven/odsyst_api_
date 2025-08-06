@@ -156,6 +156,32 @@ module.exports = {
       });
     }
   },
+  
+  async getStatusRecruitment(req, res) {
+    try {
+      const userId = req.user_id;
+      const sortType = req.query.order || "desc";
+      const sortBy = req.query.sortBy || "id";
 
+      const status_recruitment = await prisma.recruitment_status.findMany({
+          select: {
+              id: true,
+              name: true,              
+          },
+          orderBy: {
+            [sortBy]: sortType,
+          },
+      });
+
+      return res.status(200).json({
+        message: "Sukses",
+        data: status_recruitment
+      });
+    } catch (error) {
+      return res.status(500).json({
+        message: error?.message,
+      });
+    }
+  },
   
 };

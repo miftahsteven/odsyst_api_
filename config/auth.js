@@ -25,9 +25,9 @@ const authentication = async (req, res, next) => {
       if(user){
         return next();
       }else{
-        return res.status(401).send({
+        return res.status(502).send({
           success: false,
-          code: 401,
+          code: 502,
           message: "Login Problem: System Detect You're Login in other device, Please Re-Login",
         });
       }
@@ -39,9 +39,9 @@ const authentication = async (req, res, next) => {
     // });
   } catch (error) {
     if (error instanceof TokenExpiredError) {
-      return res.status(400).send({
+      return res.status(502).send({
         success: false,
-        code: 400,
+        code: 502,
         message: "ERROR : LOGIN EXPIRED",
       });
     }
